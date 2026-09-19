@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0A0A"/>
+      <stop offset="100%" style="stop-color:#000000"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FF3D00"/>
+      <stop offset="100%" style="stop-color:#FF6B3D"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="600" cy="315" r="200" fill="url(#accent)" opacity="0.06"/>
+  <text x="600" y="290" font-family="system-ui, sans-serif" font-size="56" font-weight="700" fill="url(#accent)" text-anchor="middle" letter-spacing="-2">4CLOSERS</text>
+  <text x="600" y="345" font-family="system-ui, sans-serif" font-size="18" font-weight="500" fill="#FF3D00" text-anchor="middle" letter-spacing="3">MOSCOW</text>
+  <text x="600" y="385" font-family="system-ui, sans-serif" font-size="14" fill="#444" text-anchor="middle">OG IMAGE PLACEHOLDER</text>
+</svg>
