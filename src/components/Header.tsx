@@ -2,241 +2,228 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, User, MapPin, ChevronDown } from 'lucide-react'
+import { Menu, X, User } from 'lucide-react'
 import { useStudio } from '@/components/StudioProvider'
-import { STUDIO_SLUGS, STUDIO_LABELS } from '@/types'
+import { CitySwitch } from '@/components/CitySwitch'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '#studio', label: 'Студия' },
-  { href: '#services', label: 'Услуги' },
-  { href: '#portfolio', label: 'Портфолио' },
-  { href: '#equipment', label: 'Оборудование' },
-  { href: '#faq', label: 'FAQ' },
-  { href: '#contacts', label: 'Контакты' },
+  { href: '/#studio', label: 'Студия' },
+  { href: '/works', label: 'Работы' },
+  { href: '/#faq', label: 'FAQ' },
+  { href: '/#contacts', label: 'Контакты' },
 ]
 
 export function Header() {
-  const { currentStudio, setCurrentStudio, labels } = useStudio()
+  const pathname = usePathname()
+  const { mounted, user } = useStudio()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isCityMenuOpen, setIsCityMenuOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  if (!mounted) return null
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen])
+
+  // При переходе — закрываем мобильное меню
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [pathname])
+
+  if (!mounted) {
+    return <header className="fixed top-0 left-0 right-0 z-50 h-16" aria-hidden="true" />
+  }
+
+  const isAuth = !!user
 
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
         isScrolled
-          ? 'bg-graphite-700/80 backdrop-blur-md border-b border-graphite-200/10 shadow-[0_0_40px_rgba(255,61,0,0.05)]'
-          : 'bg-transparent'
+          ? 'bg-void/85 backdrop-blur-xl border-b border-ash'
+          : 'bg-void/60 backdrop-blur-md border-b border-transparent'
       )}
     >
-      <nav className="container-custom" aria-label="Main navigation">
-        <div className="flex h-18 items-center justify-between gap-4">
+      <nav className="shell" aria-label="Основная навигация">
+        {/* grid: 1fr — логотип / auto — навигация по центру / 1fr — кнопки справа */}
+        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-6">
+          {/* Левый блок: лого */}
           <Link
             href="/"
-            className="flex items-center gap-2 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-graphite-700 rounded-md"
-            aria-label="4CLOSERS Studio — главная"
+            className="flex items-baseline gap-2 shrink-0 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-signal justify-self-start"
+            aria-label="4CLOSERS — на главную"
           >
-            <span className="font-display text-2xl font-bold tracking-tight text-white">
+            <span className="font-display text-lg font-medium tracking-tight text-bone">
               4CLOSERS
             </span>
-            <span className="hidden sm:block text-caption text-accent font-medium">
-              STUDIO
+            <span className="hidden xl:block font-mono text-[10px] uppercase tracking-[0.18em] text-bone/40">
+              rec · mix · master
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          {/* Центр: навигация */}
+          <div className="hidden lg:flex items-center justify-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="relative text-body-sm font-medium text-graphite-100 transition-colors hover:text-accent
-                           after:absolute after:bottom-[-4px] after:left-0 after:h-0.5 after:w-0 after:bg-accent
-                           after:transition-all after:duration-300 hover:after:w-full
-                           focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-graphite-700 rounded-sm"
+                className="text-sm text-bone/60 hover:text-bone transition-colors duration-200
+                           focus:outline-none focus-visible:ring-2 focus-visible:ring-signal rounded-sm"
               >
                 {item.label}
               </Link>
             ))}
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsCityMenuOpen(!isCityMenuOpen)}
-                className={cn(
-                  'flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all duration-300',
-                  'bg-graphite-200/10 border border-graphite-200/20 hover:border-accent/50',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-graphite-700'
-                )}
-                aria-expanded={isCityMenuOpen}
-                aria-haspopup="listbox"
-                aria-label={`Текущий город: ${labels[currentStudio]}. Нажмите для смены`}
-              >
-                <MapPin className="h-4 w-4 text-accent" aria-hidden="true" />
-                <span className="text-white">{labels[currentStudio]}</span>
-                <ChevronDown
-                  className={cn(
-                    'h-4 w-4 text-graphite-200 transition-transform duration-200',
-                    isCityMenuOpen && 'rotate-180'
-                  )}
-                  aria-hidden="true"
-                />
-              </button>
+          {/* Правый блок: переключатель на мобилке, кнопки — по авторизации */}
+          <div className="flex items-center gap-3 justify-self-end">
+            <CitySwitch compact className="lg:hidden" />
 
-              <AnimatePresence>
-                {isCityMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="absolute right-0 top-full mt-2 w-40 rounded-xl bg-graphite-100/95 backdrop-blur-md border border-graphite-200/20 shadow-[0_20px_40px_rgba(0,0,0,0.4)] py-2"
-                    role="listbox"
-                    aria-label="Выбор города"
-                  >
-                    {STUDIO_SLUGS.map((slug) => (
-                      <button
-                        key={slug}
-                        onClick={() => {
-                          setCurrentStudio(slug)
-                          setIsCityMenuOpen(false)
-                        }}
-                        role="option"
-                        aria-selected={currentStudio === slug}
-                        className={cn(
-                          'w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-colors',
-                          currentStudio === slug
-                            ? 'bg-accent/10 text-accent'
-                            : 'text-graphite-100 hover:bg-graphite-200/10 hover:text-white'
-                        )}
-                      >
-                        <span className="text-caption text-graphite-300">{labels[slug]}</span>
-                        {currentStudio === slug && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="h-2 w-2 rounded-full bg-accent"
-                            aria-hidden="true"
-                          />
-                        )}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            {isAuth ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="hidden sm:inline-flex h-10 w-10 items-center justify-center rounded-full
+                             border border-ash text-bone/60 hover:text-bone hover:border-bone/40
+                             transition-colors duration-200
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+                  aria-label="Профиль"
+                >
+                  <User className="h-4 w-4" aria-hidden="true" />
+                </Link>
 
-            <Link
-              href="/profile"
-              className="hidden sm:flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-graphite-100
-                         bg-graphite-200/10 border border-graphite-200/20 hover:border-accent/50 hover:text-white
-                         transition-all duration-300
-                         focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-graphite-700"
-            >
-              <User className="h-4 w-4" aria-hidden="true" />
-              <span>Профиль</span>
-            </Link>
+                <Link
+                  href="/bookings"
+                  className="hidden sm:inline-flex btn btn-solid text-sm h-10"
+                >
+                  Записаться
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  className="hidden sm:inline-flex h-10 items-center px-3 text-sm text-bone/70 hover:text-bone
+                             transition-colors duration-200
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-signal rounded-sm"
+                >
+                  Регистрация
+                </Link>
 
-            <Link
-              href="/bookings"
-              className="btn-primary text-sm px-6 py-2.5"
-            >
-              Записаться
-            </Link>
+                <Link
+                  href="/login"
+                  className="hidden sm:inline-flex h-10 items-center rounded-md px-5
+                             border border-ash hover:border-signal
+                             text-sm text-bone
+                             transition-colors duration-200
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+                >
+                  Войти
+                </Link>
+              </>
+            )}
 
             <button
               type="button"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden flex items-center justify-center p-2 rounded-md text-graphite-100 hover:text-accent transition-colors
-                         focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-graphite-700"
+              onClick={() => setIsMobileMenuOpen((v) => !v)}
+              className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full
+                         border border-ash text-bone/80 hover:text-bone hover:border-bone/40
+                         transition-colors duration-200
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-menu"
               aria-label={isMobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
             >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMobileMenuOpen ? (
+                <X className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Menu className="h-4 w-4" aria-hidden="true" />
+              )}
             </button>
           </div>
         </div>
-
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              id="mobile-menu"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
-              className="md:hidden overflow-hidden border-t border-graphite-200/10 bg-graphite-700/95 backdrop-blur-md"
-            >
-              <div className="container-custom py-6 space-y-4">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-4 py-3 text-body font-medium text-graphite-100
-                               rounded-lg bg-graphite-200/10 hover:bg-accent/10 hover:text-accent
-                               transition-all duration-300"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                <div className="pt-4 border-t border-graphite-200/10 space-y-3">
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-graphite-200/10">
-                    <MapPin className="h-5 w-5 text-accent" aria-hidden="true" />
-                    <span className="text-body font-medium text-white">{labels[currentStudio]}</span>
-                  </div>
-                  {STUDIO_SLUGS.filter((s) => s !== currentStudio).map((slug) => (
-                    <button
-                      key={slug}
-                      onClick={() => {
-                        setCurrentStudio(slug)
-                        setIsMobileMenuOpen(false)
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-graphite-200/10
-                                 text-body font-medium text-graphite-100 hover:bg-accent/10 hover:text-accent
-                                 transition-all duration-300"
-                    >
-                      <span className="text-caption text-graphite-300">{labels[slug]}</span>
-                    </button>
-                  ))}
-                  <Link
-                    href="/profile"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg
-                               bg-graphite-200/10 border border-graphite-200/20 text-body font-medium text-graphite-100
-                               hover:border-accent/50 hover:text-white transition-all duration-300"
-                  >
-                    <User className="h-5 w-5" aria-hidden="true" />
-                    Профиль
-                  </Link>
-                  <Link
-                    href="/bookings"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="btn-primary w-full justify-center py-3"
-                  >
-                    Записаться на сессию
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </nav>
+
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            id="mobile-menu"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.22, 0.61, 0.36, 1] }}
+            className="lg:hidden border-t border-ash bg-void/95 backdrop-blur-xl"
+          >
+            <div className="shell py-6">
+              <ul className="space-y-1">
+                {navItems.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block py-3 text-base text-bone/80 hover:text-bone transition-colors
+                                 focus:outline-none focus-visible:ring-2 focus-visible:ring-signal rounded-sm"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6 pt-6 border-t border-ash flex flex-col gap-3">
+                {isAuth ? (
+                  <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="btn btn-line w-full h-11"
+                    >
+                      <User className="h-4 w-4" aria-hidden="true" />
+                      Профиль
+                    </Link>
+                    <Link
+                      href="/bookings"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="btn btn-solid w-full h-11"
+                    >
+                      Записаться
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="btn btn-line w-full h-11"
+                    >
+                      Войти
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="btn btn-solid w-full h-11"
+                    >
+                      Регистрация
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   )
 }

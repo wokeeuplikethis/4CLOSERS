@@ -1,151 +1,177 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Play, Headphones, MapPin, Clock } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
 import { getStudio } from '@/data/studios'
-import { STUDIO_LABELS } from '@/types'
 import { useStudio } from '@/components/StudioProvider'
+import { CitySwitch } from '@/components/CitySwitch'
 import { cn } from '@/lib/utils'
 
-interface HeroProps {
-  initialStudio?: 'moscow' | 'spb'
-}
-
-export function Hero({ initialStudio = 'moscow' }: HeroProps) {
-  const { currentStudio } = useStudio()
+export function Hero() {
+  const { currentStudio, direction, transitionKey } = useStudio()
   const studio = getStudio(currentStudio)
 
-  const heroVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
+  const [entered, setEntered] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setEntered(true), 40)
+    return () => clearTimeout(t)
+  }, [])
+
+  const cityWord = studio.city.toUpperCase()
+
+  // «САНКТ-ПЕТЕРБУРГ» → ['САНКТ-', 'ПЕТЕРБУРГ'], «МОСКВА» → ['МОСКВА'].
+  const lines = cityWord.split('-').map((part, idx, arr) =>
+    idx < arr.length - 1 ? `${part}-` : part
+  )
+
+  // Кегль для каждой строки отдельно.
+  // Короткая строка — крупно, длинная — компактно, но не мелко.
+    function fontSizeForLine(line: string): string {
+    const n = line.length
+    if (n <= 4) return 'clamp(3.5rem, 13vw, 12rem)'  // МСК
+    if (n <= 6) return 'clamp(2.75rem, 11vw, 9.5rem)' // МОСКВА
+    if (n <= 7) return 'clamp(2.75rem, 11vw, 9.5rem)' // САНКТ-
+    return 'clamp(2rem, 8vw, 7.5rem)'                // ПЕТЕРБУРГ
   }
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] },
-    },
-  }
+  let letterIndex = 0
 
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      aria-labelledby="hero-title"
+      className="relative min-h-[100svh] flex flex-col"
+      aria-labelledby="hero-city"
     >
-      <div className="absolute inset-0 z-0" aria-hidden="true">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${studio.hero.image})` }}
-          role="img"
-          aria-label={studio.hero.alt}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-graphite-700/60 via-graphite-700/40 to-graphite-700/80" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E')] animate-grain opacity-10" />
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-graphite-700 via-graphite-700/50 to-transparent" />
+      <div className="shell pt-24 sm:pt-28 flex justify-center">
+        <CitySwitch />
       </div>
 
-      <motion.div
-        className="relative z-10 container-custom px-4 py-20"
-        variants={heroVariants}
-        initial="hidden"
-        animate="visible"
+      <div
+        key={transitionKey}
+        className={cn(
+          'shell flex-1 flex flex-col justify-center pb-16 pt-10 sm:pt-14',
+          direction === 'left' ? 'city-enter-left' : 'city-enter-right'
+        )}
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div variants={itemVariants} className="mb-6">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 text-caption font-medium text-accent tracking-wider">
-              <span className="relative h-1.5 w-1.5 rounded-full bg-accent animate-pulse-glow" aria-hidden="true" />
-              {studio.city.toUpperCase()}
-            </span>
-          </motion.div>
+        <div className="grid grid-cols-12 gap-x-6 gap-y-12">
+          <div className="col-span-12 lg:col-span-8 flex flex-col justify-end">
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone/40 mb-6">
+              {studio.shortName} · {studio.hours}
+            </p>
 
-          <motion.h1
-            id="hero-title"
-            variants={itemVariants}
-            className="font-display text-hero font-bold tracking-tight text-white mb-8 text-balance"
-            style={{ letterSpacing: '-0.03em' }}
-          >
-            ЗАПИШИ
-            <br />
-            <span className="text-gradient-accent">СВОЙ ЗВУК</span>
-          </motion.h1>
-
-          <motion.p
-            variants={itemVariants}
-            className="text-display-sm font-medium text-graphite-100 mb-10 max-w-2xl mx-auto text-balance"
-          >
-            Профессиональная запись, сведение и мастеринг.{' '}
-            <span className="text-accent">Ваш звук — наша миссия.</span>
-          </motion.p>
-
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
-          >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-primary group relative overflow-hidden px-10 py-4 text-lg"
+            <h1
+              id="hero-city"
+              className="font-display font-light text-bone tracking-[-0.045em]"
+              style={{ lineHeight: 0.95 }}
             >
-              <Play className="h-5 w-5 mr-2 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-              ЗАПИСАТЬСЯ
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-secondary px-10 py-4 text-lg"
-            >
-              <Headphones className="h-5 w-5 mr-2" aria-hidden="true" />
-              ПОСЛУШАТЬ РАБОТЫ
-            </motion.button>
-          </motion.div>
+              {lines.map((line, lineIdx) => (
+                <span
+                  key={`${transitionKey}-line-${lineIdx}`}
+                  className="block"
+                  style={{ fontSize: fontSizeForLine(line) }}
+                >
+                  {line.split('').map((ch) => {
+                    const myIndex = letterIndex++
+                    return (
+                      <span
+                        key={`${transitionKey}-${lineIdx}-${myIndex}`}
+                        className={cn(
+                          'inline-block',
+                          entered
+                            ? 'opacity-100 translate-y-0'
+                            : 'opacity-0 translate-y-[0.4em]',
+                          'transition-[opacity,transform] duration-700 ease-[cubic-bezier(.22,.61,.36,1)]'
+                        )}
+                        style={{ transitionDelay: `${myIndex * 35}ms` }}
+                      >
+                        {ch === ' ' ? '\u00A0' : ch}
+                      </span>
+                    )
+                  })}
+                </span>
+              ))}
+            </h1>
+          </div>
 
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-col sm:flex-row items-center justify-center gap-8 text-body-sm text-graphite-200"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <MapPin className="h-4 w-4 text-accent" aria-hidden="true" />
-              <span>{studio.address}</span>
+          <div className="col-span-12 lg:col-span-4 flex flex-col justify-end gap-4">
+            <div className="border-t border-ash pt-4">
+              <div className="datum">
+                <span className="k">адрес</span>
+                <span className="v text-right">{studio.address}</span>
+              </div>
+              <div className="datum">
+                <span className="k">часы</span>
+                <span className="v">{studio.hours}</span>
+              </div>
+              <div className="datum">
+                <span className="k">телефон</span>
+                <a
+                  href={`tel:${studio.phone.replace(/\s/g, '')}`}
+                  className="v hover:text-signal transition-colors"
+                >
+                  {studio.phone}
+                </a>
+              </div>
+              <div className="datum">
+                <span className="k">почта</span>
+                <a
+                  href={`mailto:${studio.email}`}
+                  className="v hover:text-signal transition-colors"
+                >
+                  {studio.email}
+                </a>
+              </div>
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
-              <span>{studio.hours}</span>
-            </div>
-          </motion.div>
+
+            <Link
+              href="/bookings"
+              className="group inline-flex items-center justify-between gap-4
+                         border border-ash hover:border-signal
+                         rounded-md px-5 h-12
+                         text-sm text-bone
+                         transition-colors duration-200
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+            >
+              <span>Забронировать сессию</span>
+              <ArrowUpRight
+                className="h-4 w-4 text-bone/40 group-hover:text-signal transition-colors duration-200"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
         </div>
 
-        <motion.div
-          variants={itemVariants}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-float"
-          style={{ animationDuration: '3s' }}
-        >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex flex-col items-center gap-2 text-graphite-300"
-          >
-            <svg
-              className="h-6 w-6 text-accent/50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-            <span className="text-caption">ПРОКРУТИТЕ</span>
-          </motion.div>
-        </motion.div>
-      </motion.div>
+        <div className="grid grid-cols-3 gap-x-6 mt-16 sm:mt-24 border-t border-ash pt-6">
+          <Stat value="500+" label="треков записано" />
+          <Stat value="7" label="лет работы" />
+          <Stat value="24/7" label="на связи" />
+        </div>
+      </div>
+
+      <div
+        aria-hidden="true"
+        className="hidden xl:block absolute right-6 top-1/2 font-mono text-[10px] uppercase tracking-[0.2em] text-bone/25 select-none"
+        style={{ writingMode: 'vertical-rl', transform: 'translateY(-50%) rotate(180deg)' }}
+      >
+        {currentStudio === 'moscow'
+          ? 'mow · 55.7558° n · 37.6173° e'
+          : 'spb · 59.9311° n · 30.3609° e'}
+      </div>
     </section>
+  )
+}
+
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <div>
+      <div className="font-display font-light text-2xl sm:text-3xl text-bone tracking-[-0.02em]">
+        {value}
+      </div>
+      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40 mt-2">
+        {label}
+      </div>
+    </div>
   )
 }

@@ -13,22 +13,14 @@ export interface StudioConfig {
   mapUrl: string
   latitude: number
   longitude: number
-  hero: {
-    image: string
-    video?: string
-    alt: string
-  }
+  hero: { image: string; video?: string; alt: string }
   images: {
     studio: string[]
     rooms: string[]
     equipment: string[]
     portfolio: string[]
   }
-  seo: {
-    title: string
-    description: string
-    ogImage: string
-  }
+  seo: { title: string; description: string; ogImage: string }
 }
 
 export interface Service {
@@ -53,6 +45,7 @@ export interface EquipmentItem {
   sortOrder: number
 }
 
+/** @deprecated Заменена на Artist + Track. */
 export interface PortfolioItem {
   id: string
   artist: string
@@ -62,6 +55,29 @@ export interface PortfolioItem {
   audioUrl?: string
   isFeatured: boolean
   sortOrder: number
+}
+
+export interface Track {
+  id: string
+  title: string
+  coverImage?: string | null
+  audioUrl?: string | null
+  genre?: string | null
+  year?: number | null
+  isFeatured: boolean
+  sortOrder: number
+}
+
+export interface Artist {
+  id: string
+  name: string
+  slug: string
+  avatar?: string | null
+  genre?: string | null
+  bio?: string | null
+  isFeatured: boolean
+  sortOrder: number
+  tracks: Track[]
 }
 
 export interface Review {
@@ -96,6 +112,13 @@ export interface User {
   createdAt: string
 }
 
+export interface UserLite {
+  role: 'USER' | 'ADMIN'
+  name?: string
+  email?: string
+  avatar?: string | null
+}
+
 export interface Booking {
   id: string
   userId: string
@@ -122,4 +145,20 @@ export const STUDIO_LABELS: Record<StudioSlug, string> = {
 export const STUDIO_CITIES: Record<StudioSlug, string> = {
   moscow: 'Москва',
   spb: 'Санкт-Петербург',
+}
+
+export const EQUIPMENT_CATEGORIES = [
+  'microphones',
+  'audio-interfaces',
+  'monitors',
+  'headphones',
+] as const
+
+export type EquipmentCategory = typeof EQUIPMENT_CATEGORIES[number]
+
+export const EQUIPMENT_LABELS: Record<string, string> = {
+  microphones: 'Микрофоны',
+  'audio-interfaces': 'Звуковая карта',
+  monitors: 'Мониторы',
+  headphones: 'Наушники',
 }

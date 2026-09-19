@@ -57,7 +57,8 @@ model Studio {
   services    Service[]
   bookings    Booking[]
   equipment   Equipment[]
-  portfolio   PortfolioItem[]
+  portfolio   PortfolioItem[]   // ← временно, для миграции
+  artists     Artist[]          // ← новое
   reviews     Review[]
 
   @@map("studios")
@@ -102,6 +103,7 @@ model Booking {
   @@map("bookings")
 }
 
+// ── ОСТАЁТСЯ ВРЕМЕННО, для миграции в Artist/Track ─────────────
 model PortfolioItem {
   id          String   @id @default(cuid())
   studioId    String
@@ -118,6 +120,7 @@ model PortfolioItem {
 
   @@map("portfolio_items")
 }
+// ────────────────────────────────────────────────────────────────
 
 model Review {
   id        String   @id @default(cuid())
@@ -147,4 +150,42 @@ model Equipment {
   updatedAt   DateTime @updatedAt
 
   @@map("equipment")
+}
+
+// ── НОВЫЕ МОДЕЛИ ────────────────────────────────────────────────
+
+model Artist {
+  id          String   @id @default(cuid())
+  studioId    String
+  studio      Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  avatar      String?
+  genre       String?
+  bio         String?
+  isFeatured  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tracks      Track[]
+
+  @@unique([studioId, slug])
+  @@map("artists")
+}
+
+model Track {
+  id          String   @id @default(cuid())
+  artistId    String
+  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  title       String
+  coverImage  String?
+  genre       String?
+  year        Int?
+  isFeatured  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tracks")
 }

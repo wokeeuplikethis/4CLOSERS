@@ -1,48 +1,133 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react'
 import { STUDIO_SLUGS, type StudioSlug, STUDIO_LABELS } from '@/types'
+
+type Direction = 'left' | 'right'
+
+interface UserLite {
+  role: string
+  name?: string
+  email?: string
+}
 
 interface StudioContextType {
   currentStudio: StudioSlug
   setCurrentStudio: (slug: StudioSlug) => void
+  direction: Direction
+  transitionKey: number
+  mounted: boolean
   labels: typeof STUDIO_LABELS
+  user: UserLite | null
+  userLoading: boolean
+  refreshUser: () => Promise<void>
 }
 
 const StudioContext = createContext<StudioContextType>({
   currentStudio: 'moscow',
   setCurrentStudio: () => {},
+  direction: 'right',
+  transitionKey: 0,
+  mounted: false,
   labels: STUDIO_LABELS,
+  user: null,
+  userLoading: true,
+  refreshUser: async () => {},
 })
 
-export function StudioProvider({ children }: { children: ReactNode }) {
-  const [currentStudio, setCurrentStudioState] = useState<StudioSlug>('moscow')
-  const [mounted, setMounted] = useState(false)
+const STORAGE_KEY = 'studio-slug'
+const DEFAULT_STUDIO: StudioSlug = 'moscow'
 
+export function StudioProvider({ children }: { children: ReactNode }) {
+  const [currentStudio, setCurrentStudioState] = useState<StudioSlug>(DEFAULT_STUDIO)
+  const [direction, setDirection] = useState<Direction>('right')
+  const [transitionKey, setTransitionKey] = useState(0)
+  const [mounted, setMounted] = useState(false)
+  const [user, setUser] = useState<UserLite | null>(null)
+  const [userLoading, setUserLoading] = useState(true)
+
+  // Гидрация города
   useEffect(() => {
     setMounted(true)
-    const saved = localStorage.getItem('studio-slug') as StudioSlug | null
-    if (saved && STUDIO_SLUGS.includes(saved)) {
-      setCurrentStudioState(saved)
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY) as StudioSlug | null
+      if (saved && STUDIO_SLUGS.includes(saved) && saved !== currentStudio) {
+        setCurrentStudioState(saved)
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Загрузка пользователя
+  const refreshUser = useCallback(async () => {
+    setUserLoading(true)
+    try {
+      const res = await fetch('/api/profile', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setUser({
+          role: data.user?.role ?? 'USER',
+          name: data.user?.name,
+          email: data.user?.email,
+        })
+      } else {
+        setUser(null)
+      }
+    } catch {
+      setUser(null)
+    } finally {
+      setUserLoading(false)
     }
   }, [])
 
-  const setCurrentStudio = (slug: StudioSlug) => {
-    setCurrentStudioState(slug)
-    localStorage.setItem('studio-slug', slug)
-  }
+  useEffect(() => {
+    refreshUser()
+  }, [refreshUser])
+
+  const setCurrentStudio = useCallback(
+    (slug: StudioSlug) => {
+      if (slug === currentStudio) return
+      const nextDirection: Direction = currentStudio === 'moscow' ? 'left' : 'right'
+      setDirection(nextDirection)
+      setCurrentStudioState(slug)
+      setTransitionKey((k) => k + 1)
+      try {
+        localStorage.setItem(STORAGE_KEY, slug)
+      } catch {}
+    },
+    [currentStudio]
+  )
 
   return (
-    <StudioContext.Provider value={{ currentStudio, setCurrentStudio, labels: STUDIO_LABELS }}>
+    <StudioContext.Provider
+      value={{
+        currentStudio,
+        setCurrentStudio,
+        direction,
+        transitionKey,
+        mounted,
+        labels: STUDIO_LABELS,
+        user,
+        userLoading,
+        refreshUser,
+      }}
+    >
       {children}
     </StudioContext.Provider>
   )
 }
 
 export function useStudio() {
-  const context = useContext(StudioContext)
-  if (!context) {
+  const ctx = useContext(StudioContext)
+  if (!ctx) {
     throw new Error('useStudio must be used within a StudioProvider')
   }
-  return context
+  return ctx
 }
