@@ -22,5 +22,6 @@ tsconfig.tsbuildinfo
 .vscode/
 .DS_Store
 
+public/uploads/
 prisma/*.db
 prisma/*.db-journal

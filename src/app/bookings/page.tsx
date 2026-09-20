@@ -4,16 +4,17 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowUpRight, Check } from 'lucide-react'
-import { getStudio } from '@/data/studios'
-import { getServices } from '@/data/services'
+import { useCurrentStudio } from '@/components/SiteDataProvider'
+import { useCityData } from '@/components/CityDataProvider'
 import { useStudio } from '@/components/StudioProvider'
 import { CitySwitch } from '@/components/CitySwitch'
 
 export default function BookingsPage() {
   const router = useRouter()
   const { currentStudio, user, userLoading } = useStudio()
-  const studio = getStudio(currentStudio)
-  const services = getServices(currentStudio)
+  const studio = useCurrentStudio()
+  const { data } = useCityData()
+  const services = data.services
 
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -35,7 +36,7 @@ export default function BookingsPage() {
     setLoading(true)
 
     const form = e.currentTarget
-    const data = {
+    const payload = {
       studioSlug: currentStudio,
       serviceSlug: selectedService,
       date: (form.elements.namedItem('date') as HTMLInputElement).value,
@@ -47,7 +48,7 @@ export default function BookingsPage() {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       })
 
       // Сессия истекла — на логин.
@@ -136,8 +137,12 @@ export default function BookingsPage() {
                 </option>
                 {services.map((s) => (
                   <option key={s.slug} value={s.slug}>
-                    {s.name} — {s.price.toLocaleString('ru-RU')} ₽ / {Math.floor(s.duration / 60)}ч{' '}
-                    {s.duration % 60}м
+                    {s.name} — {s.price.toLocaleString('ru-RU')} ₽
+                    {s.duration > 0
+                      ? ` / ${Math.floor(s.duration / 60)}ч${
+                          s.duration % 60 ? ` ${s.duration % 60}м` : ''
+                        }`
+                      : ''}
                   </option>
                 ))}
               </select>

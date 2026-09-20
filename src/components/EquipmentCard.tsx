@@ -13,16 +13,16 @@ export function EquipmentCard({ item }: { item: EquipmentItem }) {
       )}
     >
       {/* Картинка */}
-      <div className="aspect-[4/3] bg-void border-b border-ash overflow-hidden">
+      <div className="aspect-[4/3] border-b border-ash overflow-hidden relative">
         {item.image ? (
           <img
             src={item.image}
             alt={item.name}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            className="h-full w-full object-contain p-4 transition-transform duration-700 group-hover:scale-[1.03]"
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center">
+          <div className="h-full w-full flex items-center justify-center bg-void">
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone/25">
               нет фото
             </span>

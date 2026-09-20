@@ -3,9 +3,11 @@
 import Link from 'next/link'
 import { ArrowUpRight, Star } from 'lucide-react'
 import { Hero } from '@/components/Hero'
-import { StudioSlider } from '@/components/StudioSlider'
+import { PhotoCarousel } from '@/components/PhotoCarousel'
 import { EquipmentCard } from '@/components/EquipmentCard'
 import { ServiceCard } from '@/components/ServiceCard'
+import { Reveal } from '@/components/Reveal'
+import { StickyCitySwitch } from '@/components/StickyCitySwitch'
 import { useStudio } from '@/components/StudioProvider'
 import { useCityData } from '@/components/CityDataProvider'
 import { EQUIPMENT_CATEGORIES, EQUIPMENT_LABELS } from '@/types'
@@ -15,17 +17,27 @@ export function HomeContent() {
   const { transitionKey, direction } = useStudio()
   return (
     <>
+      <StickyCitySwitch />
       <Hero />
       <div
         key={transitionKey}
         className={cn(direction === 'left' ? 'city-enter-left' : 'city-enter-right')}
       >
-        <AboutSection />
-        <StudioSlider />
-        <EquipmentSection />
-        <ServicesSection />
-        <ReviewsSection />
-        <ContactCTA />
+        <Reveal>
+          <AboutSection />
+        </Reveal>
+        <Reveal delay={60}>
+          <EquipmentSection />
+        </Reveal>
+        <Reveal delay={60}>
+          <ServicesSection />
+        </Reveal>
+        <Reveal delay={60}>
+          <ReviewsSection />
+        </Reveal>
+        <Reveal delay={60}>
+          <ContactCTA />
+        </Reveal>
       </div>
     </>
   )
@@ -64,14 +76,11 @@ function AboutSection() {
 
         <div className="grid grid-cols-12 gap-x-6 gap-y-10">
           <div className="col-span-12 lg:col-span-7">
-            <div className="aspect-[16/10] rounded-lg border border-ash overflow-hidden bg-slate">
-              <img
-                src={studio.images.studio[0]}
-                alt={`${studio.city} — студия`}
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            </div>
+            <PhotoCarousel
+              images={[...studio.images.studio]}
+              alt={`${studio.city} — студия`}
+              aspect="aspect-[16/10]"
+            />
           </div>
 
           <div className="col-span-12 lg:col-span-5 flex flex-col justify-end gap-8">

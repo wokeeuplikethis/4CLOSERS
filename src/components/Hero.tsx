@@ -3,157 +3,295 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { getStudio } from '@/data/studios'
 import { useStudio } from '@/components/StudioProvider'
+import { useCityData } from '@/components/CityDataProvider'
 import { CitySwitch } from '@/components/CitySwitch'
 import { cn } from '@/lib/utils'
 
 export function Hero() {
-  const { currentStudio, direction, transitionKey } = useStudio()
-  const studio = getStudio(currentStudio)
+  const { transitionKey } = useStudio()
+
+  return <HeroInner key={transitionKey} />
+}
+
+function HeroInner() {
+  const { currentStudio } = useStudio()
+  const { data } = useCityData()
+  const studio = data.studio
 
   const [entered, setEntered] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setEntered(true), 40)
+
     return () => clearTimeout(t)
   }, [])
 
   const cityWord = studio.city.toUpperCase()
 
-  // «САНКТ-ПЕТЕРБУРГ» → ['САНКТ-', 'ПЕТЕРБУРГ'], «МОСКВА» → ['МОСКВА'].
   const lines = cityWord.split('-').map((part, idx, arr) =>
     idx < arr.length - 1 ? `${part}-` : part
   )
 
-  // Кегль для каждой строки отдельно.
-  // Короткая строка — крупно, длинная — компактно, но не мелко.
-    function fontSizeForLine(line: string): string {
-    const n = line.length
-    if (n <= 4) return 'clamp(3.5rem, 13vw, 12rem)'  // МСК
-    if (n <= 6) return 'clamp(2.75rem, 11vw, 9.5rem)' // МОСКВА
-    if (n <= 7) return 'clamp(2.75rem, 11vw, 9.5rem)' // САНКТ-
-    return 'clamp(2rem, 8vw, 7.5rem)'                // ПЕТЕРБУРГ
-  }
+  const longest = Math.max(...lines.map((l) => l.length))
+
+  const heroFontSize =
+    longest <= 8
+      ? 'clamp(3rem, 12vw, 10rem)'
+      : 'clamp(2.5rem, 9vw, 8rem)'
+
+  const crestSrc =
+    currentStudio === 'moscow'
+      ? '/images/GERB_MSK.png'
+      : '/images/GERB_SPB.png'
 
   let letterIndex = 0
 
   return (
     <section
       id="hero"
-      className="relative min-h-[100svh] flex flex-col"
+      className="relative"
       aria-labelledby="hero-city"
     >
-      <div className="shell pt-24 sm:pt-28 flex justify-center">
-        <CitySwitch />
-      </div>
+      <div className="shell pt-12 sm:pt-16 pb-16">
+        {/* Блок с городом и мета-карточкой */}
+        <div className="grid grid-cols-12 gap-x-6 gap-y-12 items-start min-h-[420px] lg:min-h-[480px]">
+          <div className="col-span-12 lg:col-span-8">
+            {/* Фиксированная область заголовка */}
+            <div className="relative min-h-[300px] sm:min-h-[320px] lg:min-h-[340px]">
+              {/* Подпись */}
+              <p
+                className="
+                  absolute
+                  left-0
+                  top-0
+                  font-mono
+                  text-[11px]
+                  uppercase
+                  tracking-[0.18em]
+                  text-bone/40
+                "
+              >
+                {studio.shortName} · {studio.name} · {studio.hours}
+              </p>
 
-      <div
-        key={transitionKey}
-        className={cn(
-          'shell flex-1 flex flex-col justify-center pb-16 pt-10 sm:pt-14',
-          direction === 'left' ? 'city-enter-left' : 'city-enter-right'
-        )}
-      >
-        <div className="grid grid-cols-12 gap-x-6 gap-y-12">
-          <div className="col-span-12 lg:col-span-8 flex flex-col justify-end">
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone/40 mb-6">
-              {studio.shortName} · {studio.hours}
-            </p>
+              {/* Герб */}
+              <img
+                src={crestSrc}
+                alt=""
+                aria-hidden="true"
+                className="
+                  absolute
+                  left-0
+                  top-14
+                  shrink-0
+                  h-20
+                  w-20
+                  sm:h-24
+                  sm:w-24
+                  lg:h-32
+                  lg:w-32
+                  object-contain
+                  invert
+                  brightness-110
+                "
+              />
 
-            <h1
-              id="hero-city"
-              className="font-display font-light text-bone tracking-[-0.045em]"
-              style={{ lineHeight: 0.95 }}
-            >
-              {lines.map((line, lineIdx) => (
-                <span
-                  key={`${transitionKey}-line-${lineIdx}`}
-                  className="block"
-                  style={{ fontSize: fontSizeForLine(line) }}
-                >
-                  {line.split('').map((ch) => {
-                    const myIndex = letterIndex++
-                    return (
-                      <span
-                        key={`${transitionKey}-${lineIdx}-${myIndex}`}
-                        className={cn(
-                          'inline-block',
-                          entered
-                            ? 'opacity-100 translate-y-0'
-                            : 'opacity-0 translate-y-[0.4em]',
-                          'transition-[opacity,transform] duration-700 ease-[cubic-bezier(.22,.61,.36,1)]'
-                        )}
-                        style={{ transitionDelay: `${myIndex * 35}ms` }}
-                      >
-                        {ch === ' ' ? '\u00A0' : ch}
-                      </span>
-                    )
-                  })}
-                </span>
-              ))}
-            </h1>
+              {/* Название города */}
+              <h1
+                id="hero-city"
+                className="
+                  absolute
+                  left-0
+                  top-12
+                  pl-20
+                  sm:pl-24
+                  lg:pl-32
+                  font-display
+                  font-light
+                  text-bone
+                  tracking-[-0.045em]
+                "
+                style={{
+                  fontSize: heroFontSize,
+                  lineHeight: 0.95,
+                }}
+              >
+                {lines.map((line, lineIdx) => (
+                  <span
+                    key={lineIdx}
+                    className="block"
+                  >
+                    {line.split('').map((ch, chIdx) => {
+                      const myIndex = letterIndex++
+
+                      return (
+                        <span
+                          key={`${lineIdx}-${chIdx}`}
+                          className={cn(
+                            'inline-block motion-reduce:transition-none',
+                            entered
+                              ? 'opacity-100 translate-y-0'
+                              : 'opacity-0 translate-y-[0.4em]',
+                            'transition-[opacity,transform] duration-600 ease-[cubic-bezier(.22,.61,.36,1)]'
+                          )}
+                          style={{
+                            transitionDelay: `${myIndex * 35}ms`,
+                          }}
+                        >
+                          {ch === ' ' ? '\u00A0' : ch}
+                        </span>
+                      )
+                    })}
+                  </span>
+                ))}
+              </h1>
+            </div>
           </div>
 
-          <div className="col-span-12 lg:col-span-4 flex flex-col justify-end gap-4">
+          {/* Правая мета-карточка */}
+          <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
             <div className="border-t border-ash pt-4">
               <div className="datum">
                 <span className="k">адрес</span>
-                <span className="v text-right">{studio.address}</span>
+
+                <span className="v text-right max-w-[16rem]">
+                  {studio.address}
+                </span>
               </div>
+
               <div className="datum">
                 <span className="k">часы</span>
-                <span className="v">{studio.hours}</span>
+
+                <span className="v">
+                  {studio.hours}
+                </span>
               </div>
+
               <div className="datum">
                 <span className="k">телефон</span>
+
                 <a
                   href={`tel:${studio.phone.replace(/\s/g, '')}`}
-                  className="v hover:text-signal transition-colors"
+                  className="
+                    v
+                    hover:text-signal
+                    transition-colors
+                  "
                 >
                   {studio.phone}
                 </a>
               </div>
+
               <div className="datum">
                 <span className="k">почта</span>
+
                 <a
                   href={`mailto:${studio.email}`}
-                  className="v hover:text-signal transition-colors"
+                  className="
+                    v
+                    hover:text-signal
+                    transition-colors
+                  "
                 >
                   {studio.email}
                 </a>
               </div>
             </div>
 
+            {/* Кнопка бронирования */}
             <Link
               href="/bookings"
-              className="group inline-flex items-center justify-between gap-4
-                         border border-ash hover:border-signal
-                         rounded-md px-5 h-12
-                         text-sm text-bone
-                         transition-colors duration-200
-                         focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+              className="
+                group
+                inline-flex
+                items-center
+                justify-between
+                gap-4
+                border
+                border-ash
+                hover:border-signal
+                rounded-md
+                px-5
+                h-12
+                text-sm
+                text-bone
+                transition-colors
+                duration-200
+                focus:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-signal
+              "
             >
-              <span>Забронировать сессию</span>
+              <span>
+                Забронировать сессию
+              </span>
+
               <ArrowUpRight
-                className="h-4 w-4 text-bone/40 group-hover:text-signal transition-colors duration-200"
+                className="
+                  h-4
+                  w-4
+                  text-bone/40
+                  group-hover:text-signal
+                  transition-colors
+                  duration-200
+                "
                 aria-hidden="true"
               />
             </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-x-6 mt-16 sm:mt-24 border-t border-ash pt-6">
-          <Stat value="500+" label="треков записано" />
-          <Stat value="7" label="лет работы" />
-          <Stat value="24/7" label="на связи" />
+        {/* Статистика */}
+        <div
+          className="
+            grid
+            grid-cols-3
+            gap-x-6
+            mt-24
+            lg:mt-32
+            border-t
+            border-ash
+            pt-6
+          "
+        >
+          <Stat
+            value="500+"
+            label="треков записано"
+          />
+
+          <Stat
+            value="7"
+            label="лет работы"
+          />
+
+          <Stat
+            value="24/7"
+            label="на связи"
+          />
         </div>
       </div>
 
+      {/* Координаты города */}
       <div
         aria-hidden="true"
-        className="hidden xl:block absolute right-6 top-1/2 font-mono text-[10px] uppercase tracking-[0.2em] text-bone/25 select-none"
-        style={{ writingMode: 'vertical-rl', transform: 'translateY(-50%) rotate(180deg)' }}
+        className="
+          hidden
+          xl:block
+          absolute
+          right-6
+          top-1/2
+          font-mono
+          text-[10px]
+          uppercase
+          tracking-[0.2em]
+          text-bone/25
+          select-none
+        "
+        style={{
+          writingMode: 'vertical-rl',
+          transform: 'translateY(-50%) rotate(180deg)',
+        }}
       >
         {currentStudio === 'moscow'
           ? 'mow · 55.7558° n · 37.6173° e'
@@ -163,13 +301,38 @@ export function Hero() {
   )
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({
+  value,
+  label,
+}: {
+  value: string
+  label: string
+}) {
   return (
     <div>
-      <div className="font-display font-light text-2xl sm:text-3xl text-bone tracking-[-0.02em]">
+      <div
+        className="
+          font-display
+          font-light
+          text-xl
+          sm:text-2xl
+          text-bone
+          tracking-[-0.02em]
+        "
+      >
         {value}
       </div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40 mt-2">
+
+      <div
+        className="
+          font-mono
+          text-[10px]
+          uppercase
+          tracking-[0.14em]
+          text-bone/40
+          mt-2
+        "
+      >
         {label}
       </div>
     </div>

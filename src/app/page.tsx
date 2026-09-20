@@ -55,15 +55,12 @@ async function loadCity(slug: 'moscow' | 'spb'): Promise<CityPayload> {
     },
     images: {
       studio: [
-        `/images/${studio.slug}/studio/studio-1.svg`,
-        `/images/${studio.slug}/studio/studio-2.svg`,
-        `/images/${studio.slug}/studio/studio-3.svg`,
-      ],
-      rooms: [
-        `/images/${studio.slug}/rooms/rooms-1.svg`,
-        `/images/${studio.slug}/rooms/rooms-2.svg`,
-        `/images/${studio.slug}/rooms/rooms-3.svg`,
-        `/images/${studio.slug}/rooms/rooms-4.svg`,
+        `/images/${studio.slug}/studio/stu1.jpg`,
+        `/images/${studio.slug}/studio/stu2.jpg`,
+        `/images/${studio.slug}/studio/stu3.jpg`,
+        `/images/${studio.slug}/studio/stu4.jpg`,
+        `/images/${studio.slug}/studio/stu5.jpg`,
+        `/images/${studio.slug}/studio/stu6.jpg`,
       ],
       equipment: [],
       portfolio: [],

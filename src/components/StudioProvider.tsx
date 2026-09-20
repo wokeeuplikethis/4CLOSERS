@@ -8,15 +8,14 @@ import {
   useCallback,
   ReactNode,
 } from 'react'
-import { STUDIO_SLUGS, type StudioSlug, STUDIO_LABELS } from '@/types'
+import {
+  STUDIO_SLUGS,
+  STUDIO_LABELS,
+  type StudioSlug,
+  type UserLite,
+} from '@/types'
 
 type Direction = 'left' | 'right'
-
-interface UserLite {
-  role: string
-  name?: string
-  email?: string
-}
 
 interface StudioContextType {
   currentStudio: StudioSlug
@@ -28,6 +27,7 @@ interface StudioContextType {
   user: UserLite | null
   userLoading: boolean
   refreshUser: () => Promise<void>
+  logout: () => Promise<void>
 }
 
 const StudioContext = createContext<StudioContextType>({
@@ -40,6 +40,7 @@ const StudioContext = createContext<StudioContextType>({
   user: null,
   userLoading: true,
   refreshUser: async () => {},
+  logout: async () => {},
 })
 
 const STORAGE_KEY = 'studio-slug'
@@ -69,13 +70,16 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     setUserLoading(true)
     try {
-      const res = await fetch('/api/profile', { cache: 'no-store' })
-      if (res.ok) {
-        const data = await res.json()
+      const res = await fetch('/api/auth/me', { cache: 'no-store' })
+      const data = await res.json().catch(() => ({}))
+      const u = data?.user
+      if (u) {
         setUser({
-          role: data.user?.role ?? 'USER',
-          name: data.user?.name,
-          email: data.user?.email,
+          id: u.id,
+          role: (u.role as 'USER' | 'ADMIN') ?? 'USER',
+          name: u.name ?? null,
+          email: u.email ?? null,
+          avatar: u.avatar ?? null,
         })
       } else {
         setUser(null)
@@ -90,6 +94,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshUser()
   }, [refreshUser])
+
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch {}
+    setUser(null)
+  }, [])
 
   const setCurrentStudio = useCallback(
     (slug: StudioSlug) => {
@@ -117,6 +128,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         user,
         userLoading,
         refreshUser,
+        logout,
       }}
     >
       {children}

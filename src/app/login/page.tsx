@@ -2,11 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowUpRight } from 'lucide-react'
+import { useStudio } from '@/components/StudioProvider'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/profile'
+  const { refreshUser } = useStudio()
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +35,8 @@ export default function LoginPage() {
         setError(data.error ?? 'Не получилось войти. Проверьте почту и пароль.')
         return
       }
-      router.push('/profile')
+      await refreshUser()
+      router.push(redirect)
       router.refresh()
     } catch {
       setError('Сеть недоступна. Попробуйте ещё раз.')
@@ -42,7 +48,6 @@ export default function LoginPage() {
   return (
     <main className="min-h-[100svh] flex items-center justify-center px-4 py-24">
       <section className="w-full max-w-md">
-        {/* Шапка */}
         <div className="mb-10">
           <Link
             href="/"
@@ -122,10 +127,6 @@ export default function LoginPage() {
             Зарегистрироваться
           </Link>
         </div>
-
-        <p className="mt-8 field-hint">
-          <span className="text-signal">демо:</span> admin@4closers.studio / admin123
-        </p>
       </section>
     </main>
   )

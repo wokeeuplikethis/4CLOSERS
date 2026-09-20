@@ -4,21 +4,38 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, User } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useStudio } from '@/components/StudioProvider'
 import { CitySwitch } from '@/components/CitySwitch'
 import { cn } from '@/lib/utils'
+import type { UserLite } from '@/types'
 
 const navItems = [
-  { href: '/#studio', label: 'Студия' },
   { href: '/works', label: 'Работы' },
-  { href: '/#faq', label: 'FAQ' },
   { href: '/#contacts', label: 'Контакты' },
 ]
 
+function Avatar({ user, size = 40 }: { user: UserLite; size?: number }) {
+  const initial = (user.name?.trim() || user.email || '?').charAt(0).toUpperCase()
+  return (
+    <span
+      className="inline-flex items-center justify-center overflow-hidden rounded-full bg-slate text-bone font-mono"
+      style={{ width: size, height: size, fontSize: size * 0.42 }}
+      aria-hidden="true"
+    >
+      {user.avatar ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+      ) : (
+        initial
+      )}
+    </span>
+  )
+}
+
 export function Header() {
   const pathname = usePathname()
-  const { mounted, user } = useStudio()
+  const { mounted, user, userLoading } = useStudio()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -36,7 +53,6 @@ export function Header() {
     }
   }, [isMobileMenuOpen])
 
-  // При переходе — закрываем мобильное меню
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [pathname])
@@ -44,8 +60,6 @@ export function Header() {
   if (!mounted) {
     return <header className="fixed top-0 left-0 right-0 z-50 h-16" aria-hidden="true" />
   }
-
-  const isAuth = !!user
 
   return (
     <header
@@ -57,14 +71,20 @@ export function Header() {
       )}
     >
       <nav className="shell" aria-label="Основная навигация">
-        {/* grid: 1fr — логотип / auto — навигация по центру / 1fr — кнопки справа */}
         <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-6">
-          {/* Левый блок: лого */}
+          {/* Лого */}
           <Link
             href="/"
-            className="flex items-baseline gap-2 shrink-0 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-signal justify-self-start"
+            className="flex items-center gap-2.5 shrink-0 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-signal justify-self-start"
             aria-label="4CLOSERS — на главную"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/logo.jpg"
+              alt=""
+              aria-hidden="true"
+              className="h-8 w-8 rounded-full object-cover shrink-0"
+            />
             <span className="font-display text-lg font-medium tracking-tight text-bone">
               4CLOSERS
             </span>
@@ -87,21 +107,26 @@ export function Header() {
             ))}
           </div>
 
-          {/* Правый блок: переключатель на мобилке, кнопки — по авторизации */}
+          {/* Правый блок */}
           <div className="flex items-center gap-3 justify-self-end">
             <CitySwitch compact className="lg:hidden" />
 
-            {isAuth ? (
+            {userLoading && !user ? (
+              <span
+                className="hidden sm:inline-block h-10 w-10 rounded-full border border-ash bg-slate/40 animate-pulse"
+                aria-hidden="true"
+              />
+            ) : user ? (
               <>
                 <Link
                   href="/profile"
                   className="hidden sm:inline-flex h-10 w-10 items-center justify-center rounded-full
-                             border border-ash text-bone/60 hover:text-bone hover:border-bone/40
+                             border border-ash hover:border-signal
                              transition-colors duration-200
                              focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
                   aria-label="Профиль"
                 >
-                  <User className="h-4 w-4" aria-hidden="true" />
+                  <Avatar user={user} />
                 </Link>
 
                 <Link
@@ -183,14 +208,14 @@ export function Header() {
               </ul>
 
               <div className="mt-6 pt-6 border-t border-ash flex flex-col gap-3">
-                {isAuth ? (
+                {user ? (
                   <>
                     <Link
                       href="/profile"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="btn btn-line w-full h-11"
                     >
-                      <User className="h-4 w-4" aria-hidden="true" />
+                      <Avatar user={user} size={20} />
                       Профиль
                     </Link>
                     <Link

@@ -4,9 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowUpRight } from 'lucide-react'
+import { useStudio } from '@/components/StudioProvider'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { refreshUser } = useStudio()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,6 +43,7 @@ export default function RegisterPage() {
         setError(data.error ?? 'Не получилось зарегистрироваться. Попробуйте снова.')
         return
       }
+      await refreshUser()
       router.push('/profile')
       router.refresh()
     } catch {

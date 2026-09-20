@@ -9,6 +9,11 @@ const LABELS: Record<StudioSlug, string> = {
   spb: 'СПБ',
 }
 
+const CRESTS: Record<StudioSlug, string> = {
+  moscow: '/images/GERB_MSK.png',
+  spb: '/images/GERB_SPB.png',
+}
+
 interface CitySwitchProps {
   className?: string
   /** Узкая версия для мобильных / хедера. */
@@ -33,9 +38,9 @@ export function CitySwitch({ className, compact = false }: CitySwitchProps) {
         compact ? 'h-10' : 'h-12',
         className
       )}
-      style={{ minWidth: compact ? '132px' : '168px' }}
+      style={{ minWidth: compact ? '148px' : '184px' }}
     >
-      {/* Подложка активного сегмента. Едет через transform. */}
+      {/* Подложка активного сегмента */}
       <span
         aria-hidden="true"
         className={cn(
@@ -67,19 +72,22 @@ export function CitySwitch({ className, compact = false }: CitySwitchProps) {
               'focus:outline-none focus-visible:ring-2 focus-visible:ring-signal',
               compact
                 ? 'px-3 text-[10px] tracking-[0.12em] h-full'
-                : 'px-5 text-[11px] tracking-[0.16em] h-full',
+                : 'px-4 text-[11px] tracking-[0.16em] h-full',
               isActive ? 'text-void' : 'text-bone/50 hover:text-bone/80'
             )}
           >
-            <span
+            {/* Герб. Активный — чёрный (без invert). Неактивный — белый (invert). */}
+            <img
+              src={CRESTS[slug]}
+              alt=""
               aria-hidden="true"
               className={cn(
-                'h-1.5 w-1.5 rounded-full transition-all duration-300 shrink-0',
-                isActive
-                  ? 'bg-signal opacity-100 scale-100'
-                  : 'bg-bone/30 opacity-0 scale-50'
+                'shrink-0 object-contain transition-[filter] duration-200',
+                compact ? 'h-3.5 w-3.5' : 'h-4 w-4',
+                isActive ? '' : 'invert brightness-110'
               )}
             />
+
             <span className="whitespace-nowrap">{LABELS[slug]}</span>
           </button>
         )

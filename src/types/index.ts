@@ -16,7 +16,6 @@ export interface StudioConfig {
   hero: { image: string; video?: string; alt: string }
   images: {
     studio: string[]
-    rooms: string[]
     equipment: string[]
     portfolio: string[]
   }
@@ -42,18 +41,6 @@ export interface EquipmentItem {
   model: string
   description?: string
   image?: string
-  sortOrder: number
-}
-
-/** @deprecated Заменена на Artist + Track. */
-export interface PortfolioItem {
-  id: string
-  artist: string
-  trackTitle: string
-  genre: string
-  coverImage: string
-  audioUrl?: string
-  isFeatured: boolean
   sortOrder: number
 }
 
@@ -89,12 +76,6 @@ export interface Review {
   createdAt: string
 }
 
-export interface FAQItem {
-  question: string
-  answer: string
-  citySpecific?: boolean
-}
-
 export interface BookingFormData {
   studioSlug: 'moscow' | 'spb'
   serviceId: string
@@ -107,15 +88,16 @@ export interface User {
   id: string
   name: string
   email: string
-  avatar?: string
+  avatar?: string | null
   role: 'USER' | 'ADMIN'
   createdAt: string
 }
 
 export interface UserLite {
+  id: string
   role: 'USER' | 'ADMIN'
-  name?: string
-  email?: string
+  name?: string | null
+  email?: string | null
   avatar?: string | null
 }
 

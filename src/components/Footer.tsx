@@ -2,25 +2,29 @@
 
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { getStudio } from '@/data/studios'
-import { useStudio } from '@/components/StudioProvider'
+import { useCurrentStudio } from '@/components/SiteDataProvider'
 
 export function Footer() {
-  const { currentStudio } = useStudio()
-  const studio = getStudio(currentStudio)
+  const studio = useCurrentStudio()
 
   const navLinks = [
-    { label: 'Студия', href: '#studio' },
-    { label: 'Услуги', href: '#services' },
-    { label: 'Работы', href: '#portfolio' },
-    { label: 'Оборудование', href: '#equipment' },
-    { label: 'Вопросы', href: '#faq' },
+    { label: 'Студия', href: '/#studio' },
+    { label: 'Работы', href: '/works' },
     { label: 'Записаться', href: '/bookings' },
+    { label: 'Профиль', href: '/profile' },
   ]
 
   const socialLinks = [
-    { label: 'Telegram', href: studio.telegram.startsWith('http') ? studio.telegram : `https://t.me/${studio.telegram.replace('@', '')}` },
-    { label: 'VK', href: studio.vk.startsWith('http') ? studio.vk : `https://${studio.vk}` },
+    {
+      label: 'Telegram',
+      href: studio.telegram.startsWith('http')
+        ? studio.telegram
+        : `https://t.me/${studio.telegram.replace('@', '')}`,
+    },
+    {
+      label: 'VK',
+      href: studio.vk.startsWith('http') ? studio.vk : `https://${studio.vk}`,
+    },
     { label: 'Почта', href: `mailto:${studio.email}` },
   ]
 
@@ -32,16 +36,16 @@ export function Footer() {
   return (
     <footer className="border-t border-ash" role="contentinfo">
       <div className="shell py-16 lg:py-20">
-        {/* Верхний блок: лого + дескриптор слева, три колонки справа. */}
         <div className="grid grid-cols-12 gap-x-6 gap-y-12">
+          {/* Лого + дескриптор */}
           <div className="col-span-12 lg:col-span-5">
             <Link
               href="/"
               className="inline-flex items-baseline gap-2 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
-              aria-label="4CLOSERS — на главную"
+              aria-label="БЛИЗКИЕ — на главную"
             >
               <span className="font-display text-lg font-medium tracking-tight text-bone">
-                4CLOSERS
+                БЛИЗКИЕ
               </span>
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone/40">
                 rec · mix · master
@@ -52,6 +56,7 @@ export function Footer() {
             </p>
           </div>
 
+          {/* Навигация */}
           <div className="col-span-6 sm:col-span-4 lg:col-span-3">
             <h3 className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40 mb-4">
               навигация
@@ -71,6 +76,7 @@ export function Footer() {
             </ul>
           </div>
 
+          {/* Соцсети */}
           <div className="col-span-6 sm:col-span-4 lg:col-span-2">
             <h3 className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40 mb-4">
               соцсети
@@ -92,6 +98,7 @@ export function Footer() {
             </ul>
           </div>
 
+          {/* Контакты */}
           <div className="col-span-12 sm:col-span-4 lg:col-span-2">
             <h3 className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40 mb-4">
               контакт
@@ -111,10 +118,10 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Нижняя строка: копирайт + легал + кнопка "наверх". */}
+        {/* Нижняя строка */}
         <div className="mt-16 pt-6 border-t border-ash flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/35">
-            © {new Date().getFullYear()} 4CLOSERS · {currentStudio === 'moscow' ? 'мск' : 'спб'}
+            © {new Date().getFullYear()} БЛИЗКИЕ · {studio.shortName}
           </p>
 
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -134,7 +141,10 @@ export function Footer() {
                          focus:outline-none focus-visible:ring-2 focus-visible:ring-signal rounded-sm"
             >
               наверх
-              <ArrowUpRight className="h-3 w-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+              <ArrowUpRight
+                className="h-3 w-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </a>
           </div>
         </div>
