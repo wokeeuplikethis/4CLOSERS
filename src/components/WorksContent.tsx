@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { AudioPlayer } from '@/components/AudioPlayer'
+import { StreamingLinks } from '@/components/StreamingLinks'
 import type { Artist } from '@/types'
 
 export function WorksContent({ artists }: { artists: Artist[] }) {
@@ -16,7 +16,7 @@ export function WorksContent({ artists }: { artists: Artist[] }) {
         <div className="shell">
           <h1
             className="font-display font-light text-bone mb-6"
-            style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}
+            style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)' }}
           >
             Работы
           </h1>
@@ -43,47 +43,38 @@ export function WorksContent({ artists }: { artists: Artist[] }) {
     setTrackIndex((i) => (i + 1) % artist.tracks.length)
 
   return (
-    <section className="band pt-6 lg:pt-10">
+    <section className="band pt-4 lg:pt-6">
       <div className="shell">
-        <header className="mb-8">
+        <header className="mb-6">
           <div className="section-mark">
             <span className="num">01</span>
             <span className="rule" />
           </div>
           <h1
             className="font-display font-light text-bone tracking-[-0.03em] leading-[0.95]"
-            style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}
+            style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)' }}
           >
             Работы
           </h1>
-          <p className="text-sm lg:text-base text-bone/60 mt-3 max-w-[68ch]">
+          <p className="text-sm text-bone/60 mt-2 max-w-[68ch]">
             Артисты и треки, которые вышли из наших комнат.
           </p>
         </header>
 
-        <div className="grid grid-cols-12 gap-x-6 gap-y-8 items-stretch">
+        <div className="grid grid-cols-12 gap-x-6 gap-y-6 items-stretch">
           {/* ─── Карточка артиста ─── */}
           <div className="col-span-12 lg:col-span-6">
             <article className="panel overflow-hidden flex flex-col h-full">
-              <div className="aspect-[4/3] bg-void border-b border-ash overflow-hidden shrink-0">
-                {artist.avatar ? (
-                  <img
-                    src={artist.avatar}
-                    alt={artist.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-slate">
-                    <span className="font-display text-6xl text-bone/15">
-                      {artist.name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <CrossfadeImage
+                src={artist.avatar}
+                alt={artist.name}
+                fallbackLetter={artist.name.charAt(0)}
+                className="aspect-[16/10]"
+              />
 
-              <div className="p-4 lg:p-5 flex-1 flex flex-col">
-                <div className="flex items-baseline justify-between gap-4 mb-2">
-                  <h2 className="font-display text-lg lg:text-xl text-bone tracking-[-0.02em] line-clamp-2">
+              <div className="p-3 lg:p-4 flex-1 flex flex-col">
+                <div className="flex items-baseline justify-between gap-3 mb-2">
+                  <h2 className="font-display text-base lg:text-lg text-bone tracking-[-0.02em] line-clamp-2">
                     {artist.name}
                   </h2>
                   {artist.isFeatured && (
@@ -101,7 +92,7 @@ export function WorksContent({ artists }: { artists: Artist[] }) {
                 )}
 
                 {artist.bio && (
-                  <p className="text-sm leading-relaxed text-bone/70 mb-3 line-clamp-2">
+                  <p className="text-[13px] leading-snug text-bone/70 mb-2 line-clamp-2">
                     {artist.bio}
                   </p>
                 )}
@@ -156,30 +147,22 @@ export function WorksContent({ artists }: { artists: Artist[] }) {
           {/* ─── Карточка трека ─── */}
           <div className="col-span-12 lg:col-span-6">
             <article className="panel overflow-hidden flex flex-col h-full">
-              <div className="aspect-[4/3] bg-void border-b border-ash overflow-hidden shrink-0">
-                {track?.coverImage ? (
-                  <img
-                    src={track.coverImage}
-                    alt={track.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-slate">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone/25">
-                      обложка
-                    </span>
-                  </div>
-                )}
-              </div>
+              <CrossfadeImage
+                src={track?.coverImage ?? null}
+                alt={track?.title ?? 'Обложка'}
+                fallbackLetter=""
+                fallbackText="обложка"
+                className="aspect-[16/10]"
+              />
 
-              <div className="p-4 lg:p-5 flex-1 flex flex-col">
+              <div className="p-3 lg:p-4 flex-1 flex flex-col">
                 {track ? (
                   <>
-                    <h3 className="font-display text-lg lg:text-xl text-bone tracking-[-0.02em] mb-2 line-clamp-2">
+                    <h3 className="font-display text-base lg:text-lg text-bone tracking-[-0.02em] mb-2 line-clamp-2">
                       {track.title}
                     </h3>
 
-                    <div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40 mb-2 truncate">
+                    <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40 mb-2 truncate">
                       {track.genre && <span className="truncate">{track.genre}</span>}
                       {track.year && <span className="shrink-0">· {track.year}</span>}
                       {track.isFeatured && (
@@ -190,13 +173,12 @@ export function WorksContent({ artists }: { artists: Artist[] }) {
                       )}
                     </div>
 
-                    {track.audioUrl && (
-                      <AudioPlayer
-                        key={track.id}
-                        src={track.audioUrl}
-                        className="w-full mb-2"
-                      />
-                    )}
+                    <StreamingLinks
+                      yandex={track.yandexUrl}
+                      vk={track.vkUrl}
+                      spotify={track.spotifyUrl}
+                      className="mb-2"
+                    />
 
                     {artist.tracks.length > 1 && (
                       <div className="mt-auto pt-2 border-t border-ash flex items-center justify-between">
@@ -234,5 +216,135 @@ export function WorksContent({ artists }: { artists: Artist[] }) {
         </div>
       </div>
     </section>
+  )
+}
+
+/* ─── Кроссфейд-картинка: единый state, без гонок ─── */
+
+interface CrossfadeImageProps {
+  src?: string | null
+  alt: string
+  fallbackLetter: string
+  fallbackText?: string
+  className?: string
+  duration?: number
+}
+function CrossfadeImage({
+  src,
+  alt,
+  fallbackLetter,
+  fallbackText,
+  className,
+  duration = 400,
+}: CrossfadeImageProps) {
+  // Оба слоя в одном state-объекте — гарантированно согласованы
+  const [layers, setLayers] = useState<{
+    current: string | null
+    previous: string | null
+    /** 0 — current видно, 1 — previous видно */
+    phase: 0 | 1
+  }>({
+    current: src,
+    previous: null,
+    phase: 0,
+  })
+
+  // Храним актуальный src в ref, чтобы избежать гонок в useEffect
+  const srcRef = useRef(src)
+
+  useEffect(() => {
+    if (srcRef.current === src) return
+    srcRef.current = src
+
+    // Меняем состояние один раз: previous = то, что видно сейчас,
+    // current = новое, phase сразу 1 — prev opacity 0, current opacity 1
+    setLayers((prev) => {
+      const visible = prev.phase === 0 ? prev.current : prev.previous
+      return {
+        current: src,
+        previous: visible,
+        phase: 0,
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src])
+
+  return (
+    <div
+      className={cn(
+        'bg-void border-b border-ash overflow-hidden shrink-0 relative',
+        className
+      )}
+    >
+      {/* Previous layer — уходит в opacity 0 */}
+      {layers.previous !== null && layers.previous !== layers.current && (
+        <div
+          key={`prev-${layers.previous}`}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            opacity: 0,
+            transition: `opacity ${duration}ms ease-in-out`,
+          }}
+        >
+          <LayerContent
+            src={layers.previous}
+            alt=""
+            fallbackLetter={fallbackLetter}
+            fallbackText={fallbackText}
+          />
+        </div>
+      )}
+
+      {/* Current layer — всегда opacity 1 */}
+      <div
+        key={`cur-${layers.current ?? 'empty'}`}
+        className="absolute inset-0"
+        style={{
+          opacity: 1,
+          transition: `opacity ${duration}ms ease-in-out`,
+        }}
+      >
+        <LayerContent
+          src={layers.current}
+          alt={alt}
+          fallbackLetter={fallbackLetter}
+          fallbackText={fallbackText}
+        />
+      </div>
+    </div>
+  )
+}
+
+/* ─── Внутренний контент слоя ─── */
+
+function LayerContent({
+  src,
+  alt,
+  fallbackLetter,
+  fallbackText,
+}: {
+  src: string | null
+  alt: string
+  fallbackLetter: string
+  fallbackText?: string
+}) {
+  if (!src) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-slate">
+        {fallbackLetter ? (
+          <span className="font-display text-5xl text-bone/15">
+            {fallbackLetter}
+          </span>
+        ) : (
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone/25">
+            {fallbackText ?? ''}
+          </span>
+        )}
+      </div>
+    )
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={alt} className="h-full w-full object-cover" />
   )
 }

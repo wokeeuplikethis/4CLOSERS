@@ -41,7 +41,7 @@ export async function PATCH(
   const body = await req.json().catch(() => ({}))
   const prev = await prisma.track.findFirst({
     where: { id: params.trackId, artistId: params.id },
-    select: { coverImage: true, audioUrl: true },
+    select: { coverImage: true },
   })
   if (!prev) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -59,19 +59,29 @@ export async function PATCH(
     if (Number.isFinite(n)) data.sortOrder = n
   }
 
+  // Ссылки на стриминги
+  if ('yandexUrl' in body) {
+    data.yandexUrl = typeof body.yandexUrl === 'string' && body.yandexUrl.trim()
+      ? body.yandexUrl.trim()
+      : null
+  }
+  if ('vkUrl' in body) {
+    data.vkUrl = typeof body.vkUrl === 'string' && body.vkUrl.trim()
+      ? body.vkUrl.trim()
+      : null
+  }
+  if ('spotifyUrl' in body) {
+    data.spotifyUrl = typeof body.spotifyUrl === 'string' && body.spotifyUrl.trim()
+      ? body.spotifyUrl.trim()
+      : null
+  }
+
   if ('coverImage' in body) {
     const next = typeof body.coverImage === 'string' && body.coverImage ? body.coverImage : null
     if (prev.coverImage && prev.coverImage !== next) {
       await storage.delete(prev.coverImage).catch(() => {})
     }
     data.coverImage = next
-  }
-  if ('audioUrl' in body) {
-    const next = typeof body.audioUrl === 'string' && body.audioUrl ? body.audioUrl : null
-    if (prev.audioUrl && prev.audioUrl !== next) {
-      await storage.delete(prev.audioUrl).catch(() => {})
-    }
-    data.audioUrl = next
   }
 
   try {
@@ -99,14 +109,13 @@ export async function DELETE(
 
   const track = await prisma.track.findFirst({
     where: { id: params.trackId, artistId: params.id },
-    select: { coverImage: true, audioUrl: true },
+    select: { coverImage: true },
   })
   if (!track) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   await prisma.track.delete({ where: { id: params.trackId } })
 
   if (track.coverImage) await storage.delete(track.coverImage).catch(() => {})
-  if (track.audioUrl) await storage.delete(track.audioUrl).catch(() => {})
 
   return NextResponse.json({ success: true })
 }

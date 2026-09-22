@@ -51,9 +51,11 @@ export default async function AdminTrackEditPage({
           artistId: artist.id,
           title: track.title,
           coverImage: track.coverImage,
-          audioUrl: track.audioUrl,
           genre: track.genre ?? '',
           year: track.year,
+          yandexUrl: track.yandexUrl ?? '',
+          vkUrl: track.vkUrl ?? '',
+          spotifyUrl: track.spotifyUrl ?? '',
           isFeatured: track.isFeatured,
           sortOrder: track.sortOrder,
         }}

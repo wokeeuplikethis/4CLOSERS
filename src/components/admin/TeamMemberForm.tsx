@@ -8,16 +8,18 @@ import { cn } from '@/lib/utils'
 
 interface Initial {
   id?: string
-  artistId: string
-  title: string
-  coverImage: string | null
-  genre: string
-  year: number | null
-  yandexUrl: string
+  name: string
+  nickname: string
+  position: string
+  timeInTeam: string
+  experience: string
+  bio: string
+  photo: string | null
+  telegramUrl: string
   vkUrl: string
-  spotifyUrl: string
-  isFeatured: boolean
+  instagramUrl: string
   sortOrder: number
+  isActive: boolean
 }
 
 interface Props {
@@ -25,7 +27,7 @@ interface Props {
   initial: Initial
 }
 
-export function TrackForm({ mode, initial }: Props) {
+export function TeamMemberForm({ mode, initial }: Props) {
   const router = useRouter()
   const [values, setValues] = useState<Initial>(initial)
   const [saving, setSaving] = useState(false)
@@ -44,8 +46,8 @@ export function TrackForm({ mode, initial }: Props) {
     setSaving(true)
 
     const url = mode === 'create'
-      ? `/api/admin/artists/${initial.artistId}/tracks`
-      : `/api/admin/artists/${initial.artistId}/tracks/${initial.id}`
+      ? '/api/admin/team'
+      : `/api/admin/team/${initial.id}`
 
     const method = mode === 'create' ? 'POST' : 'PATCH'
 
@@ -57,7 +59,7 @@ export function TrackForm({ mode, initial }: Props) {
       })
 
       if (res.status === 401) {
-        router.push('/login?redirect=/admin/artists')
+        router.push('/login?redirect=/admin/team')
         return
       }
       if (res.status === 403) {
@@ -73,8 +75,8 @@ export function TrackForm({ mode, initial }: Props) {
 
       setSaved(true)
 
-      if (mode === 'create') {
-        router.push(`/admin/artists/${initial.artistId}`)
+      if (mode === 'create' && json.member?.id) {
+        router.push(`/admin/team/${json.member.id}`)
         return
       }
       router.refresh()
@@ -87,15 +89,12 @@ export function TrackForm({ mode, initial }: Props) {
 
   async function onDelete() {
     if (!initial.id) return
-    if (!confirm('Удалить трек?')) return
+    if (!confirm('Удалить участника команды?')) return
     setDeleting(true)
     try {
-      const res = await fetch(
-        `/api/admin/artists/${initial.artistId}/tracks/${initial.id}`,
-        { method: 'DELETE' }
-      )
+      const res = await fetch(`/api/admin/team/${initial.id}`, { method: 'DELETE' })
       if (res.ok) {
-        router.push(`/admin/artists/${initial.artistId}`)
+        router.push('/admin/team')
         router.refresh()
       } else {
         setError('Не удалось удалить.')
@@ -107,96 +106,124 @@ export function TrackForm({ mode, initial }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6 max-w-2xl">
+      <FileUploader
+        kind="image"
+        value={values.photo}
+        onChange={(url) => update('photo', url || null)}
+        label="фото"
+        aspect="aspect-[4/5]"
+      />
+
       <label className="block">
-        <span className="field-label">название</span>
+        <span className="field-label">имя</span>
         <input
           className="field"
-          value={values.title}
-          onChange={(e) => update('title', e.target.value)}
+          value={values.name}
+          onChange={(e) => update('name', e.target.value)}
           required
         />
       </label>
 
-      <FileUploader
-        kind="image"
-        value={values.coverImage}
-        onChange={(url) => update('coverImage', url || null)}
-        label="обложка"
-        aspect="aspect-square"
-      />
+      <label className="block">
+        <span className="field-label">ник (необязательно)</span>
+        <input
+          className="field font-mono"
+          value={values.nickname}
+          onChange={(e) => update('nickname', e.target.value)}
+          placeholder="например: kizaru"
+        />
+      </label>
+
+      <label className="block">
+        <span className="field-label">должность</span>
+        <input
+          className="field"
+          value={values.position}
+          onChange={(e) => update('position', e.target.value)}
+          placeholder="Звукорежиссёр, Саунд-продюсер, CEO, Менеджер…"
+          required
+        />
+      </label>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="block">
-          <span className="field-label">жанр (необязательно)</span>
+          <span className="field-label">в команде (необязательно)</span>
           <input
             className="field"
-            value={values.genre}
-            onChange={(e) => update('genre', e.target.value)}
+            value={values.timeInTeam}
+            onChange={(e) => update('timeInTeam', e.target.value)}
+            placeholder="например: 5 лет"
           />
         </label>
         <label className="block">
-          <span className="field-label">год (необязательно)</span>
+          <span className="field-label">стаж (необязательно)</span>
           <input
-            type="number"
-            className="field font-mono"
-            value={values.year ?? ''}
-            onChange={(e) => {
-              const v = e.target.value
-              update('year', v === '' ? null : Number(v) || null)
-            }}
-            min={1900}
-            max={2100}
+            className="field"
+            value={values.experience}
+            onChange={(e) => update('experience', e.target.value)}
+            placeholder="например: 12 лет в звукозаписи"
           />
         </label>
       </div>
 
-      {/* Ссылки на стриминги */}
+      <label className="block">
+        <span className="field-label">описание (необязательно)</span>
+        <textarea
+          className="field resize-none"
+          rows={4}
+          value={values.bio}
+          onChange={(e) => update('bio', e.target.value)}
+          placeholder="Работал с …, отвечает за …"
+        />
+      </label>
+
+      {/* Соцсети */}
       <div className="space-y-4 pt-4 border-t border-ash">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40">
-          ссылки на стриминги
+          соцсети
         </p>
 
         <label className="block">
-          <span className="field-label">Яндекс.Музыка</span>
+          <span className="field-label">Telegram</span>
           <input
             type="url"
             className="field font-mono text-[13px]"
-            value={values.yandexUrl}
-            onChange={(e) => update('yandexUrl', e.target.value)}
-            placeholder="https://music.yandex.ru/album/..."
+            value={values.telegramUrl}
+            onChange={(e) => update('telegramUrl', e.target.value)}
+            placeholder="https://t.me/username"
           />
         </label>
 
         <label className="block">
-          <span className="field-label">ВК Музыка</span>
+          <span className="field-label">ВКонтакте</span>
           <input
             type="url"
             className="field font-mono text-[13px]"
             value={values.vkUrl}
             onChange={(e) => update('vkUrl', e.target.value)}
-            placeholder="https://vk.com/music/..."
+            placeholder="https://vk.com/username"
           />
         </label>
 
         <label className="block">
-          <span className="field-label">Spotify</span>
+          <span className="field-label">Instagram</span>
           <input
             type="url"
             className="field font-mono text-[13px]"
-            value={values.spotifyUrl}
-            onChange={(e) => update('spotifyUrl', e.target.value)}
-            placeholder="https://open.spotify.com/track/..."
+            value={values.instagramUrl}
+            onChange={(e) => update('instagramUrl', e.target.value)}
+            placeholder="https://instagram.com/username"
           />
         </label>
 
         <p className="field-hint">
-          Заполняй только те, где трек реально есть. Пустые ссылки не показываются на сайте.
+          Заполняй только то, что есть. Пустые ссылки не показываются.
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="block">
-          <span className="field-label">порядок</span>
+          <span className="field-label">порядок (число, меньше — выше)</span>
           <input
             type="number"
             className="field font-mono"
@@ -207,11 +234,11 @@ export function TrackForm({ mode, initial }: Props) {
         <label className="flex items-end gap-3 pb-2">
           <input
             type="checkbox"
-            checked={values.isFeatured}
-            onChange={(e) => update('isFeatured', e.target.checked)}
+            checked={values.isActive}
+            onChange={(e) => update('isActive', e.target.checked)}
             className="h-4 w-4 accent-signal"
           />
-          <span className="text-sm text-bone/80">Избранное</span>
+          <span className="text-sm text-bone/80">Показывать на сайте</span>
         </label>
       </div>
 

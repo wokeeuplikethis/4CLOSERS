@@ -48,9 +48,11 @@ export interface Track {
   id: string
   title: string
   coverImage?: string | null
-  audioUrl?: string | null
   genre?: string | null
   year?: number | null
+  yandexUrl?: string | null
+  vkUrl?: string | null
+  spotifyUrl?: string | null
   isFeatured: boolean
   sortOrder: number
 }

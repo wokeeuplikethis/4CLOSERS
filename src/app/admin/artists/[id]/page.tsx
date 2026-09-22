@@ -82,53 +82,56 @@ export default async function AdminArtistEditPage({
                 <th>название</th>
                 <th>жанр</th>
                 <th>год</th>
-                <th>аудио</th>
+                <th>ссылки</th>
                 <th>избранное</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {artist.tracks.map((t) => (
-                <tr key={t.id}>
-                  <td>
-                    {t.coverImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={t.coverImage}
-                        alt=""
-                        className="h-10 w-10 rounded object-cover border border-ash"
-                      />
-                    ) : (
-                      <span className="font-mono text-[10px] text-bone/30">—</span>
-                    )}
-                  </td>
-                  <td className="text-bone">{t.title}</td>
-                  <td className="text-bone/60 text-[12px]">{t.genre ?? '—'}</td>
-                  <td className="font-mono text-[12px] text-bone/50">{t.year ?? '—'}</td>
-                  <td>
-                    <span
-                      className={cn(
-                        'font-mono text-[10px] uppercase tracking-[0.14em]',
-                        t.audioUrl ? 'text-signal' : 'text-bone/30'
+              {artist.tracks.map((t) => {
+                const linkCount = [t.yandexUrl, t.vkUrl, t.spotifyUrl].filter(Boolean).length
+                return (
+                  <tr key={t.id}>
+                    <td>
+                      {t.coverImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={t.coverImage}
+                          alt=""
+                          className="h-10 w-10 rounded object-cover border border-ash"
+                        />
+                      ) : (
+                        <span className="font-mono text-[10px] text-bone/30">—</span>
                       )}
-                    >
-                      {t.audioUrl ? 'есть' : 'нет'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={cn('dot', t.isFeatured && 'dot-live')} />
-                  </td>
-                  <td className="text-right">
-                    <Link
-                      href={`/admin/artists/${artist.id}/tracks/${t.id}`}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-ash text-bone/60 hover:text-bone hover:border-signal transition-colors"
-                      aria-label="Редактировать"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="text-bone">{t.title}</td>
+                    <td className="text-bone/60 text-[12px]">{t.genre ?? '—'}</td>
+                    <td className="font-mono text-[12px] text-bone/50">{t.year ?? '—'}</td>
+                    <td>
+                      <span
+                        className={cn(
+                          'font-mono text-[10px] uppercase tracking-[0.14em]',
+                          linkCount > 0 ? 'text-signal' : 'text-bone/30'
+                        )}
+                      >
+                        {linkCount > 0 ? `${linkCount} из 3` : 'нет'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={cn('dot', t.isFeatured && 'dot-live')} />
+                    </td>
+                    <td className="text-right">
+                      <Link
+                        href={`/admin/artists/${artist.id}/tracks/${t.id}`}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-ash text-bone/60 hover:text-bone hover:border-signal transition-colors"
+                        aria-label="Редактировать"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}

@@ -45,11 +45,13 @@ export async function POST(
 
   const title = typeof body.title === 'string' ? body.title.trim() : ''
   const coverImage = typeof body.coverImage === 'string' && body.coverImage ? body.coverImage : null
-  const audioUrl = typeof body.audioUrl === 'string' && body.audioUrl ? body.audioUrl : null
   const genre = typeof body.genre === 'string' ? body.genre.trim() : ''
   const year = Number.isFinite(Number(body.year)) && Number(body.year) > 0
     ? Number(body.year)
     : null
+  const yandexUrl = typeof body.yandexUrl === 'string' && body.yandexUrl ? body.yandexUrl.trim() : null
+  const vkUrl = typeof body.vkUrl === 'string' && body.vkUrl ? body.vkUrl.trim() : null
+  const spotifyUrl = typeof body.spotifyUrl === 'string' && body.spotifyUrl ? body.spotifyUrl.trim() : null
   const isFeatured = body.isFeatured === true
   const sortOrder = Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : 0
 
@@ -63,9 +65,11 @@ export async function POST(
         artistId: params.id,
         title,
         coverImage,
-        audioUrl,
         genre: genre || null,
         year,
+        yandexUrl,
+        vkUrl,
+        spotifyUrl,
         isFeatured,
         sortOrder,
       },

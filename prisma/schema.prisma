@@ -180,13 +180,35 @@ model Track {
   artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
   title       String
   coverImage  String?
-  audioUrl    String?    // ← добавлено
   genre       String?
   year        Int?
+  yandexUrl   String?
+  vkUrl       String?
+  spotifyUrl  String?
   isFeatured  Boolean  @default(false)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@map("tracks")
+}
+
+model TeamMember {
+  id               String   @id @default(cuid())
+  name             String
+  nickname         String?
+  position         String
+  timeInTeam       String?
+  experience       String?
+  bio              String?
+  photo            String?
+  telegramUrl      String?
+  vkUrl            String?
+  instagramUrl     String?
+  sortOrder        Int      @default(0)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("team_members")
 }

@@ -132,17 +132,17 @@ export default function ProfilePage() {
   const isAdmin = role === 'ADMIN'
 
   return (
-    <main className="min-h-[100svh] pt-4 pb-24 lg:pt-8">
+    <main className="min-h-[100svh] pt-8 pb-24">
       <section className="shell max-w-6xl">
         {/* Заголовок */}
-        <div className="section-mark mb-10">
+        <div className="section-mark mb-8">
           <span className="num">профиль</span>
           <span className="rule" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-12">
-          {/* ЛЕВАЯ КОЛОНКА — карточка пользователя */}
-          <aside className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start">
+          {/* ЛЕВАЯ КОЛОНКА — карточка пользователя (шире) */}
+          <aside className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
             <div className="panel p-8">
               {/* Аватар */}
               <div className="flex flex-col items-center text-center">
@@ -150,7 +150,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="group relative h-40 w-40 rounded-full border border-ash overflow-hidden
+                  className="group relative h-48 w-48 rounded-full border border-ash overflow-hidden
                              bg-slate hover:border-signal transition-colors
                              focus:outline-none focus-visible:ring-2 focus-visible:ring-signal
                              disabled:opacity-60 disabled:cursor-wait"
@@ -162,7 +162,7 @@ export default function ProfilePage() {
                   ) : (
                     <span
                       className="flex h-full w-full items-center justify-center font-display font-light text-bone/70"
-                      style={{ fontSize: '3.5rem' }}
+                      style={{ fontSize: '4rem' }}
                     >
                       {initial}
                     </span>
@@ -182,7 +182,7 @@ export default function ProfilePage() {
                   )}
                   {isAdmin && (
                     <span
-                      className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-signal border-2 border-void"
+                      className="absolute bottom-2 right-2 h-4 w-4 rounded-full bg-signal border-2 border-void"
                       aria-label="Администратор"
                     />
                   )}
@@ -283,7 +283,7 @@ export default function ProfilePage() {
           </aside>
 
           {/* ПРАВАЯ КОЛОНКА — история + настройки */}
-          <div className="lg:col-span-8 space-y-12">
+          <div className="lg:col-span-7 space-y-12">
             {/* История */}
             <section>
               <div className="flex items-end justify-between gap-4 mb-6">
@@ -305,14 +305,14 @@ export default function ProfilePage() {
                   <div className="h-4 w-2/5 bg-slate animate-pulse rounded" />
                 </div>
               ) : bookings.length === 0 ? (
-                <div className="panel p-12 text-center">
+                <div className="panel p-10 text-center">
                   <p
                     className="font-display font-light text-bone/80 mb-3"
                     style={{ fontSize: 'clamp(1.25rem, 3vw, 1.75rem)' }}
                   >
                     Пока пусто
                   </p>
-                  <p className="text-sm text-bone/50 mb-8 max-w-[44ch] mx-auto">
+                  <p className="text-sm text-bone/50 mb-6 max-w-[44ch] mx-auto">
                     Первая сессия — самая интересная. Выберите услугу и слот, а мы подтвердим.
                   </p>
                   <Link href="/bookings" className="btn btn-line">

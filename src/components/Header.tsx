@@ -12,6 +12,7 @@ import type { UserLite } from '@/types'
 
 const navItems = [
   { href: '/works', label: 'Работы' },
+  { href: '/team', label: 'Команда' },
   { href: '/#contacts', label: 'Контакты' },
 ]
 

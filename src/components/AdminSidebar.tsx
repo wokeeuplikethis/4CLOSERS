@@ -10,6 +10,7 @@ const links = [
   { href: '/admin/services', label: 'Услуги' },
   { href: '/admin/equipment', label: 'Оборудование' },
   { href: '/admin/artists', label: 'Артисты' },
+  { href: '/admin/team', label: 'Команда' },
   { href: '/admin/reviews', label: 'Отзывы', disabled: true },
 ]
 

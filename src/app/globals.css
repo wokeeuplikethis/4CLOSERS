@@ -369,11 +369,11 @@
     padding: 0 0 0.75rem 0;
     border-bottom: 1px solid rgb(var(--ash));
   }
-  .table tbody td {
+    .table tbody td {
     padding: 0.875rem 0;
     border-bottom: 1px solid rgb(var(--ash));
     color: rgb(var(--bone) / 0.8);
-    vertical-align: baseline;
+    vertical-align: middle;
   }
   .table tbody tr:last-child td { border-bottom: 0; }
   .table tbody tr:hover td { color: rgb(var(--bone)); }
