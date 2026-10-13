@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+build/
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# Logs
+*.log
+dev.log
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Misc
+.vscode/
+.DS_Store
+
+public/uploads/
+prisma/*.db
+prisma/*.db-journal

@@ -1,0 +1,390 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   4CLOSERS — токен-система
+   Холодный чёрный, тёплый белый, кислотный лайм.
+   Плоско. Тонкие обводки. Без градиентов и blur-кругов.
+   ============================================================ */
+
+@layer base {
+  :root {
+    --void: 10 10 11;
+    --slate: 20 20 22;
+    --ash: 42 42 46;
+    --bone: 232 230 225;
+    --signal: 200 200 200;
+
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+
+  * {
+    @apply border-ash;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background: rgb(var(--void));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    background: rgb(var(--void));
+    color: rgb(var(--bone));
+    font-family: var(--font-sans), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  ::selection {
+    background: rgb(var(--signal));
+    color: rgb(var(--void));
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: rgb(var(--void)); }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--ash));
+    border: 2px solid rgb(var(--void));
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--signal)); }
+
+  /* Фокус — лайм, без glow. Только контур. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--signal));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Заголовки — Unbounded, но не капс. Sentence case. */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: rgb(var(--bone));
+  }
+
+  h1 { font-size: clamp(2.75rem, 7vw, 6.5rem); line-height: 0.95; }
+  h2 { font-size: clamp(2rem, 4.5vw, 3.5rem); line-height: 1; }
+  h3 { font-size: clamp(1.25rem, 2vw, 1.75rem); line-height: 1.15; }
+
+  p { color: rgb(var(--bone) / 0.72); }
+
+  a { color: inherit; text-decoration: none; }
+
+  strong { color: rgb(var(--bone)); font-weight: 500; }
+
+  hr {
+    border: 0;
+    border-top: 1px solid rgb(var(--ash));
+  }
+}
+
+/* ============================================================
+   КОМПОНЕНТЫ
+   ============================================================ */
+
+@layer components {
+  /* Контейнер: асимметричные поля. Левое поле — под метаданные. */
+  .shell {
+    @apply mx-auto w-full;
+    max-width: 1440px;
+    padding-left: clamp(1.25rem, 4vw, 4rem);
+    padding-right: clamp(1.25rem, 4vw, 4rem);
+  }
+
+  @media (min-width: 1536px) {
+    .shell { max-width: 1680px; }
+  }
+
+  @media (min-width: 1920px) {
+    .shell { max-width: 1760px; }
+  }
+
+  /* Секция: ритм задаётся вертикальными отступами, не карточками */
+  .band {
+    padding-top: clamp(5rem, 10vw, 9rem);
+    padding-bottom: clamp(5rem, 10vw, 9rem);
+  }
+
+  .band-tight {
+    padding-top: clamp(3rem, 6vw, 5rem);
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+  }
+
+  /* Заголовок секции: номер + название + линия. Не центр. */
+  .section-mark {
+    @apply flex items-baseline gap-4 mb-3;
+  }
+
+  .section-mark .num {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    color: rgb(var(--signal));
+  }
+
+  .section-mark .rule {
+    flex: 1;
+    height: 1px;
+    background: rgb(var(--ash));
+  }
+
+  .section-lede {
+    font-size: clamp(1rem, 1.3vw, 1.125rem);
+    line-height: 1.55;
+    max-width: 68ch;
+    color: rgb(var(--bone) / 0.62);
+    margin-top: 1.25rem;
+  }
+
+  /* Кнопки: плоские, без блика, без стрелки. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium;
+    font-size: 0.9375rem;
+    padding: 0.875rem 1.5rem;
+    border-radius: var(--radius);
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-solid {
+    background: rgb(var(--signal));
+    color: rgb(var(--void));
+    border: 1px solid rgb(var(--signal));
+  }
+  .btn-solid:hover { background: rgb(var(--bone)); border-color: rgb(var(--bone)); }
+  .btn-solid:active { background: rgb(var(--signal) / 0.85); }
+
+  .btn-line {
+    background: transparent;
+    color: rgb(var(--bone));
+    border: 1px solid rgb(var(--ash));
+  }
+  .btn-line:hover { border-color: rgb(var(--bone)); background: rgb(var(--bone) / 0.04); }
+
+  .btn-quiet {
+    background: transparent;
+    color: rgb(var(--bone) / 0.7);
+    border: 1px solid transparent;
+    padding: 0.625rem 0.875rem;
+  }
+  .btn-quiet:hover { color: rgb(var(--bone)); background: rgb(var(--bone) / 0.04); }
+
+  /* Слой контента: фон slate, тонкая обводка ash */
+  .panel {
+    background: rgb(var(--slate));
+    border: 1px solid rgb(var(--ash));
+    border-radius: var(--radius-lg);
+  }
+
+  /* Полоса данных: моно-лейбл + значение. Для цен, часов, адресов. */
+  .datum {
+    @apply flex items-baseline justify-between gap-4;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid rgb(var(--ash));
+  }
+  .datum:last-child { border-bottom: 0; }
+  .datum .k {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--bone) / 0.45);
+  }
+  .datum .v {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.875rem;
+    color: rgb(var(--bone));
+  }
+  .datum .v em {
+    font-style: normal;
+    color: rgb(var(--signal));
+  }
+
+  /* Строка списка — вместо карточки. Линия снизу, hover — лайм-линия. */
+  .row {
+    @apply flex items-baseline justify-between gap-6;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid rgb(var(--ash));
+    transition: border-color 200ms ease;
+  }
+  .row:hover { border-bottom-color: rgb(var(--signal)); }
+
+  .row .row-title {
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-size: 1.125rem;
+    color: rgb(var(--bone));
+    letter-spacing: -0.01em;
+  }
+  .row .row-note {
+    font-size: 0.875rem;
+    color: rgb(var(--bone) / 0.5);
+    margin-top: 0.25rem;
+  }
+  .row .row-val {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.875rem;
+    color: rgb(var(--bone) / 0.8);
+    white-space: nowrap;
+  }
+  .row .row-val strong { color: rgb(var(--signal)); font-weight: 400; }
+
+  /* Поля ввода: плоско, тонкая обводка */
+  .field {
+    width: 100%;
+    background: rgb(var(--void));
+    border: 1px solid rgb(var(--ash));
+    border-radius: var(--radius);
+    padding: 0.75rem 0.875rem;
+    color: rgb(var(--bone));
+    font-size: 0.9375rem;
+    font-family: inherit;
+    transition: border-color 160ms ease;
+  }
+  .field::placeholder { color: rgb(var(--bone) / 0.3); }
+  .field:focus {
+    outline: none;
+    border-color: rgb(var(--signal));
+  }
+  .field:focus-visible { outline: none; }
+
+  .field-label {
+    display: block;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--bone) / 0.45);
+    margin-bottom: 0.5rem;
+  }
+
+  select.field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23E8E6E1' stroke-opacity='0.5' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+    padding-right: 2.25rem;
+  }
+
+  /* Тег: маленький, моно, обводка */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--bone) / 0.6);
+    border: 1px solid rgb(var(--ash));
+    border-radius: 999px;
+    padding: 0.25rem 0.625rem;
+  }
+  .tag-signal {
+    color: rgb(var(--signal));
+    border-color: rgb(var(--signal) / 0.4);
+  }
+}
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+
+@layer utilities {
+  .text-mono {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--bone) / 0.45);
+  }
+
+  .text-signal { color: rgb(var(--signal)); }
+  .text-muted { color: rgb(var(--bone) / 0.55); }
+  .text-dim { color: rgb(var(--bone) / 0.35); }
+
+  .bg-void { background: rgb(var(--void)); }
+  .bg-slate { background: rgb(var(--slate)); }
+  .border-ash { border-color: rgb(var(--ash)); }
+
+  .balance { text-wrap: balance; }
+
+  /* Единственная анимация в системе: смена города.
+     Контент уезжает в сторону и приезжает с другой. */
+  @keyframes city-in-right {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes city-in-left {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .city-enter-right { animation: city-in-right 320ms cubic-bezier(.22,.61,.36,1) both; }
+  .city-enter-left  { animation: city-in-left  320ms cubic-bezier(.22,.61,.36,1) both; }
+}
+
+/* Ошибки и подсказки под полями. */
+  .field-error {
+    font-size: 0.8125rem;
+    color: rgb(var(--signal));
+    margin-top: 0.375rem;
+    line-height: 1.4;
+  }
+
+  .field-hint {
+    font-size: 0.8125rem;
+    color: rgb(var(--bone) / 0.4);
+    margin-top: 0.375rem;
+    line-height: 1.4;
+  }
+
+  /* Плотная таблица данных — для админки, истории, профиля. */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .table thead th {
+    text-align: left;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--bone) / 0.4);
+    font-weight: 400;
+    padding: 0 0 0.75rem 0;
+    border-bottom: 1px solid rgb(var(--ash));
+  }
+    .table tbody td {
+    padding: 0.875rem 0;
+    border-bottom: 1px solid rgb(var(--ash));
+    color: rgb(var(--bone) / 0.8);
+    vertical-align: middle;
+  }
+  .table tbody tr:last-child td { border-bottom: 0; }
+  .table tbody tr:hover td { color: rgb(var(--bone)); }
+
+  /* Статус-точка: активна / нет. Одна на весь сайт. */
+  .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgb(var(--bone) / 0.3);
+    vertical-align: middle;
+  }
+  .dot-live { background: rgb(var(--signal)); }
