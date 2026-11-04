@@ -107,7 +107,6 @@ async function loadCity(slug: 'moscow' | 'spb'): Promise<CityPayload> {
         id: t.id,
         title: t.title,
         coverImage: t.coverImage,
-        audioUrl: t.audioUrl,
         genre: t.genre,
         year: t.year,
         isFeatured: t.isFeatured,

@@ -1,5 +1,5 @@
 {
-  "name": "studio-website",
+  "name": "4CLOSERS ",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -47,6 +47,7 @@
     "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.40",
     "prisma": "^5.17.0",
     "tailwindcss": "^3.4.7",

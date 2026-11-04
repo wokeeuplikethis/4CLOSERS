@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowUpRight, Star } from 'lucide-react'
 import { Hero } from '@/components/Hero'
@@ -15,6 +16,9 @@ import { cn } from '@/lib/utils'
 
 export function HomeContent() {
   const { transitionKey, direction } = useStudio()
+  const { all } = useCityData()
+  const [isBookingOpen, setIsBookingOpen] = useState(false)
+
   return (
     <>
       <StickyCitySwitch />
@@ -30,20 +34,18 @@ export function HomeContent() {
           <EquipmentSection />
         </Reveal>
         <Reveal delay={60}>
-          <ServicesSection />
+          <ServicesSection onBookClick={() => setIsBookingOpen(true)} />
         </Reveal>
         <Reveal delay={60}>
           <ReviewsSection />
         </Reveal>
         <Reveal delay={60}>
-          <ContactCTA />
+          <ContactCTA onBookClick={() => setIsBookingOpen(true)} />
         </Reveal>
       </div>
     </>
   )
 }
-
-/* ── Общие части ─────────────────────────────────────────── */
 
 function SectionHead({ num, title, lede }: { num: string; title: string; lede?: string }) {
   return (
@@ -62,8 +64,6 @@ function SectionHead({ num, title, lede }: { num: string; title: string; lede?: 
     </header>
   )
 }
-
-/* ── 01 · Студия ─────────────────────────────────────────── */
 
 function AboutSection() {
   const { data } = useCityData()
@@ -112,8 +112,6 @@ function Stat({ value, label }: { value: string; label: string }) {
   )
 }
 
-/* ── 05 · Оборудование ─────────────────────────────────── */
-
 function EquipmentSection() {
   const { data } = useCityData()
   const { equipment } = data
@@ -155,9 +153,7 @@ function EquipmentSection() {
   )
 }
 
-/* ── 06 · Услуги ──────────────────────────────────────── */
-
-function ServicesSection() {
+function ServicesSection({ onBookClick }: { onBookClick: () => void }) {
   const { data } = useCityData()
   const { services } = data
 
@@ -177,17 +173,18 @@ function ServicesSection() {
         </div>
 
         <div className="mt-10">
-          <Link href="/bookings" className="btn btn-solid">
+          <button
+            onClick={onBookClick}
+            className="btn btn-solid cursor-pointer"
+          >
             Забронировать сессию
             <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
+          </button>
         </div>
       </div>
     </section>
   )
 }
-
-/* ── 04 · Отзывы ──────────────────────────────────────── */
 
 function ReviewsSection() {
   const { data } = useCityData()
@@ -242,9 +239,7 @@ function formatDate(iso: string) {
   }
 }
 
-/* ── 08 · Записаться ────────────────────────────────── */
-
-function ContactCTA() {
+function ContactCTA({ onBookClick }: { onBookClick: () => void }) {
   const { data } = useCityData()
   const { studio } = data
   const { currentStudio } = useStudio()
@@ -266,18 +261,18 @@ function ContactCTA() {
           </div>
 
           <div className="col-span-12 lg:col-span-4 lg:pb-3">
-            <Link
-              href="/bookings"
+            <button
+              onClick={onBookClick}
               className="group inline-flex w-full items-center justify-between gap-4
                          border border-signal hover:bg-signal
                          rounded-md px-6 h-14
                          text-base text-bone hover:text-void
                          transition-colors duration-200
-                         focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-signal cursor-pointer"
             >
               <span>Забронировать сессию</span>
               <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
-            </Link>
+            </button>
           </div>
         </div>
 
