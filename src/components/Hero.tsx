@@ -328,53 +328,53 @@ function HeroInner() {
             </div>
           </div>
 
-          {/* Главный CTA — сразу под названием города */}
-            <div className="col-span-12 lg:col-span-8 mt-5 sm:mt-7" style={fadeUpStyle(430)}>
-              <Link
-                href="/bookings"
-                className="
-                  group
-                  inline-flex
-                  w-full
-                  sm:w-full
-                  max-w-none
-                  min-h-14
-                  items-center
-                  justify-between
-                  gap-8
-                  rounded-md
-                  border
-                  border-bone/70
-                  bg-void
-                  px-6
-                  sm:px-7
-                  py-4
-                  text-base
-                  font-medium
-                  text-bone
-                  transition-colors
-                  duration-200
-                  hover:border-bone
-                  hover:bg-bone
-                  hover:text-void
-                  focus:outline-none
-                  focus-visible:ring-2
-                  focus-visible:ring-signal
-                  focus-visible:ring-offset-2
-                  focus-visible:ring-offset-void
-                "
-              >
-                <span>Забронировать сессию</span>
-                <ArrowUpRight
-                  className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  aria-hidden="true"
-                />
-              </Link>
-              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40">
-                Выбрать студию и время
-              </p>
-            </div>
-          </div>
+        </div>
+
+        {/* CTA вынесен из 12-колоночной сетки: занимает всю ширину shell */}
+        <div className="mt-8 sm:mt-10 w-full" style={fadeUpStyle(430)}>
+          <Link
+            href="/bookings"
+            className="
+              group
+              flex
+              w-full
+              min-h-16
+              items-center
+              justify-between
+              gap-8
+              rounded-md
+              border
+              border-bone/70
+              bg-void
+              px-7
+              sm:px-9
+              lg:px-10
+              py-5
+              text-base
+              font-medium
+              text-bone
+              transition-colors
+              duration-200
+              hover:border-bone
+              hover:bg-bone
+              hover:text-void
+              focus:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-signal
+              focus-visible:ring-offset-2
+              focus-visible:ring-offset-void
+            "
+          >
+            <span>Забронировать сессию</span>
+            <ArrowUpRight
+              className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              aria-hidden="true"
+            />
+          </Link>
+          <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40">
+            Выбрать студию и время
+          </p>
+        </div>
 
         {/* Статистика */}
         <div
@@ -412,7 +412,7 @@ function HeroInner() {
         </div>
       </div>
 
-      {/* Координаты выбранной студии — появляются синхронно с новым городом */}
+      {/* Координаты повторяются трижды, заполняя правую вертикальную панель */}
       <div
         aria-label={`Координаты студии ${studio.name}`}
         className="
@@ -423,7 +423,7 @@ function HeroInner() {
           top-20
           bottom-28
           min-h-[360px]
-          w-36
+          w-40
           flex-col
           justify-between
           border-l
@@ -433,33 +433,37 @@ function HeroInner() {
           select-none
         "
       >
-        <div style={fadeUpStyle(120)}>
-          <p className="text-[9px] uppercase tracking-[0.2em] text-bone/35">Studio</p>
-          <p className="mt-2 text-sm tracking-[0.08em] text-bone/80">{studio.shortName.toUpperCase()}</p>
-          <span className="mt-3 block h-px w-7 bg-bone/25" />
+        <div style={fadeUpStyle(100)}>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-bone/35">Studio / {studio.shortName.toUpperCase()}</p>
         </div>
 
-        <div style={fadeUpStyle(210)}>
-          <p className="text-[9px] uppercase tracking-[0.2em] text-bone/35">Latitude</p>
-          <p className="mt-2 text-sm tracking-[0.04em] text-bone/75 tabular-nums">
-            {Math.abs(studio.latitude).toFixed(4)}°
-            <span className="ml-1 text-bone/35">{studio.latitude < 0 ? 'S' : 'N'}</span>
-          </p>
-        </div>
-
-        <div style={fadeUpStyle(300)}>
-          <p className="text-[9px] uppercase tracking-[0.2em] text-bone/35">Longitude</p>
-          <p className="mt-2 text-sm tracking-[0.04em] text-bone/75 tabular-nums">
-            {Math.abs(studio.longitude).toFixed(4)}°
-            <span className="ml-1 text-bone/35">{studio.longitude < 0 ? 'W' : 'E'}</span>
-          </p>
-        </div>
-
-        <p
-          className="text-[8px] uppercase tracking-[0.18em] text-bone/20"
-          style={fadeUpStyle(390)}
-        >
-          4Closers · Coordinates
+        {[0, 1, 2].map((item) => (
+          <div
+            key={item}
+            className="border-t border-bone/10 pt-4"
+            style={fadeUpStyle(170 + item * 110)}
+          >
+            <p className="text-[9px] uppercase tracking-[0.2em] text-bone/30">
+              Coordinates / 0{item + 1}
+            </p>
+            <div className="mt-3">
+              <p className="text-[9px] uppercase tracking-[0.16em] text-bone/35">Latitude</p>
+              <p className="mt-1 text-sm tracking-[0.04em] text-bone/75 tabular-nums">
+                {Math.abs(studio.latitude).toFixed(4)}°
+                <span className="ml-1 text-bone/35">{studio.latitude < 0 ? 'S' : 'N'}</span>
+              </p>
+            </div>
+            <div className="mt-3">
+              <p className="text-[9px] uppercase tracking-[0.16em] text-bone/35">Longitude</p>
+              <p className="mt-1 text-sm tracking-[0.04em] text-bone/75 tabular-nums">
+                {Math.abs(studio.longitude).toFixed(4)}°
+                <span className="ml-1 text-bone/35">{studio.longitude < 0 ? 'W' : 'E'}</span>
+              </p>
+            </div>
+          </div>
+        ))}
+        <p className="text-[8px] uppercase tracking-[0.18em] text-bone/20" style={fadeUpStyle(500)}>
+          4Closers · Location data
         </p>
       </div>
     </section>
