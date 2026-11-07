@@ -48,13 +48,14 @@ export function Reveal({
     <Tag
       ref={ref as any}
       className={cn(
-        'transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,0.61,0.36,1)]',
-        shown ? 'opacity-100 translate-y-0' : 'opacity-0',
+        'will-change-[opacity,transform,filter] transition-[opacity,transform,filter] duration-800 ease-[cubic-bezier(0.22,0.61,0.36,1)]',
+        shown ? 'opacity-100 translate-y-0 blur-0 scale-100' : 'opacity-0 blur-[8px] scale-[0.985]',
         className
       )}
       style={{
         transitionDelay: `${delay}ms`,
         transform: shown ? undefined : `translateY(${y}px)`,
+        filter: shown ? 'blur(0)' : 'blur(8px)',
       }}
     >
       {children}
