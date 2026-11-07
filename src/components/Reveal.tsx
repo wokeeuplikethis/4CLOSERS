@@ -49,12 +49,12 @@ export function Reveal({
       ref={ref as any}
       className={cn(
         'will-change-[opacity,transform,filter] transition-[opacity,transform,filter] duration-800 ease-[cubic-bezier(0.22,0.61,0.36,1)]',
-        shown ? 'opacity-100 translate-y-0 blur-0 scale-100' : 'opacity-0 blur-[8px] scale-[0.985]',
+        shown ? 'opacity-100 blur-0' : 'opacity-0 blur-[8px]',
         className
       )}
       style={{
         transitionDelay: `${delay}ms`,
-        transform: shown ? undefined : `translateY(${y}px)`,
+        transform: shown ? 'translateY(0) scale(1)' : `translateY(${y}px) scale(0.985)`,
         filter: shown ? 'blur(0)' : 'blur(8px)',
       }}
     >
