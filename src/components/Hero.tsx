@@ -333,52 +333,52 @@ function HeroInner() {
             </div>
           </div>
 
-          {/* Кнопка бронирования — пока на всю ширину, ниже сетки */}
-        </div>
-
-        {/* Кнопка бронирования */}
-        <div className="mt-8 flex justify-end" style={fadeUpStyle(430)}>
-          <Link
-            href="/bookings"
-            className="
-              group
-              inline-flex
-              items-center
-              justify-between
-              gap-4
-              border
-              border-ash
-              hover:border-signal
-              rounded-md
-              px-5
-              h-12
-              text-sm
-              text-bone
-              transition-colors
-              duration-200
-              focus:outline-none
-              focus-visible:ring-2
-              focus-visible:ring-signal
-              min-w-[280px]
-            "
-          >
-            <span>
-              Забронировать сессию
-            </span>
-
-            <ArrowUpRight
-              className="
-                h-4
-                w-4
-                text-bone/40
-                group-hover:text-signal
-                transition-colors
-                duration-200
-              "
-              aria-hidden="true"
-            />
-          </Link>
-        </div>
+          {/* Главный CTA — сразу под названием города */}
+            <div className="mt-5 sm:mt-7" style={fadeUpStyle(430)}>
+              <Link
+                href="/bookings"
+                className="
+                  group
+                  inline-flex
+                  w-full
+                  sm:w-auto
+                  min-h-14
+                  min-w-[min(100%,320px)]
+                  items-center
+                  justify-between
+                  gap-8
+                  rounded-md
+                  border
+                  border-signal
+                  bg-signal
+                  px-6
+                  sm:px-7
+                  py-4
+                  text-base
+                  font-medium
+                  text-void
+                  transition-colors
+                  duration-200
+                  hover:border-bone
+                  hover:bg-bone
+                  focus:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-signal
+                  focus-visible:ring-offset-2
+                  focus-visible:ring-offset-void
+                "
+              >
+                <span>Забронировать студию</span>
+                <ArrowUpRight
+                  className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  aria-hidden="true"
+                />
+              </Link>
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40">
+                Выбрать студию и время
+              </p>
+            </div>
+          </div>
 
         {/* Статистика */}
         <div
