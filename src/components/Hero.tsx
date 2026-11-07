@@ -203,9 +203,6 @@ function HeroInner() {
         transitionDelay: stage === 'shown' ? '200ms' : '0ms',
       }
 
-  // Координаты берём из активной студии, чтобы они всегда совпадали с выбранным городом.
-  const coords = `${studio.shortName.toLowerCase()} · ${studio.latitude.toFixed(4)}° n · ${studio.longitude.toFixed(4)}° e`
-
   let letterIndex = 0
 
   return (
