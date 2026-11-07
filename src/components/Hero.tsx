@@ -332,7 +332,7 @@ function HeroInner() {
           </div>
 
           {/* Главный CTA — сразу под названием города */}
-            <div className="mt-5 sm:mt-7" style={fadeUpStyle(430)}>
+            <div className="col-span-12 lg:col-span-8 mt-5 sm:mt-7" style={fadeUpStyle(430)}>
               <Link
                 href="/bookings"
                 className="
@@ -340,7 +340,7 @@ function HeroInner() {
                   inline-flex
                   w-full
                   sm:w-full
-                  max-w-[520px]
+                  max-w-none
                   min-h-14
                   items-center
                   justify-between
@@ -415,28 +415,55 @@ function HeroInner() {
         </div>
       </div>
 
-      {/* Координаты города */}
+      {/* Координаты выбранной студии — появляются синхронно с новым городом */}
       <div
-        aria-hidden="true"
+        aria-label={`Координаты студии ${studio.name}`}
         className="
           hidden
-          xl:block
+          xl:flex
           absolute
-          right-6
-          top-1/2
+          right-7
+          top-20
+          bottom-28
+          min-h-[360px]
+          w-36
+          flex-col
+          justify-between
+          border-l
+          border-bone/10
+          pl-5
           font-mono
-          text-[10px]
-          uppercase
-          tracking-[0.2em]
-          text-bone/25
           select-none
         "
-        style={{
-          writingMode: 'vertical-rl',
-          transform: 'translateY(-50%) rotate(180deg)',
-        }}
       >
-        {coords}
+        <div style={fadeUpStyle(120)}>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-bone/35">Studio</p>
+          <p className="mt-2 text-sm tracking-[0.08em] text-bone/80">{studio.shortName.toUpperCase()}</p>
+          <span className="mt-3 block h-px w-7 bg-bone/25" />
+        </div>
+
+        <div style={fadeUpStyle(210)}>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-bone/35">Latitude</p>
+          <p className="mt-2 text-sm tracking-[0.04em] text-bone/75 tabular-nums">
+            {Math.abs(studio.latitude).toFixed(4)}°
+            <span className="ml-1 text-bone/35">{studio.latitude < 0 ? 'S' : 'N'}</span>
+          </p>
+        </div>
+
+        <div style={fadeUpStyle(300)}>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-bone/35">Longitude</p>
+          <p className="mt-2 text-sm tracking-[0.04em] text-bone/75 tabular-nums">
+            {Math.abs(studio.longitude).toFixed(4)}°
+            <span className="ml-1 text-bone/35">{studio.longitude < 0 ? 'W' : 'E'}</span>
+          </p>
+        </div>
+
+        <p
+          className="text-[8px] uppercase tracking-[0.18em] text-bone/20"
+          style={fadeUpStyle(390)}
+        >
+          4Closers · Coordinates
+        </p>
       </div>
     </section>
   )
