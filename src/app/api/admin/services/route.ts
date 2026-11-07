@@ -21,7 +21,10 @@ export async function GET(request: Request) {
       ? { studio: { slug: studioSlug } }
       : undefined,
     orderBy: [{ studioId: 'asc' }, { sortOrder: 'asc' }],
-    include: { studio: { select: { slug: true, city: true } } },
+    include: {
+      studio: { select: { slug: true, city: true } },
+      room: { select: { id: true, slug: true, name: true } },
+    },
   })
 
   return NextResponse.json({ services })
@@ -49,6 +52,9 @@ export async function POST(request: Request) {
     : []
   const isActive = body.isActive !== false
   const sortOrder = Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : 0
+  const roomId =
+    typeof body.roomId === 'string' && body.roomId.trim() !== '' ? body.roomId.trim() : null
+  const requiresSchedule = typeof body.requiresSchedule === 'boolean' ? body.requiresSchedule : true
 
   if (!studioSlug || !name || !slug || !description) {
     return NextResponse.json(
@@ -68,19 +74,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Студия не найдена' }, { status: 404 })
   }
 
+  if (roomId) {
+    const room = await prisma.room.findUnique({ where: { id: roomId } })
+    if (!room || room.studioId !== studio.id) {
+      return NextResponse.json({ error: 'Помещение не найдено' }, { status: 400 })
+    }
+  }
+
   try {
     const service = await prisma.service.create({
       data: {
         studioId: studio.id,
+        roomId,
         name,
         slug,
         description,
         price,
         duration,
         features,
+        requiresSchedule,
         isActive,
         sortOrder,
       },
+      include: { room: { select: { id: true, slug: true, name: true } } },
     })
     return NextResponse.json({ service })
   } catch (e: unknown) {

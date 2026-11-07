@@ -2,16 +2,14 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { cn } from '@/lib/utils'
+import { AdminRow, EditCell } from '@/components/admin/AdminRow'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminArtistsPage() {
   const artists = await prisma.artist.findMany({
-    orderBy: [{ studioId: 'asc' }, { sortOrder: 'asc' }],
-    include: {
-      studio: { select: { slug: true, city: true } },
-      _count: { select: { tracks: true } },
-    },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    include: { _count: { select: { tracks: true } } },
   })
 
   return (
@@ -40,35 +38,41 @@ export default async function AdminArtistsPage() {
         <table className="table">
           <thead>
             <tr>
-              <th>студия</th>
+              <th>фото</th>
               <th>имя</th>
               <th>жанр</th>
               <th>треков</th>
               <th>избранное</th>
               <th>порядок</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {artists.map((a) => (
-              <tr key={a.id}>
-                <td className="font-mono text-[11px] uppercase tracking-[0.14em] text-bone/50">
-                  {a.studio.slug === 'moscow' ? 'мск' : 'спб'}
-                </td>
+              <AdminRow key={a.id} href={`/admin/artists/${a.id}`}>
                 <td>
-                  <Link
-                    href={`/admin/artists/${a.id}`}
-                    className="text-bone hover:text-signal transition-colors"
-                  >
-                    {a.name}
-                  </Link>
+                  {a.avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={a.avatar}
+                      alt=""
+                      className="h-10 w-10 rounded object-cover border border-ash"
+                    />
+                  ) : (
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-bone font-display text-sm text-void">
+                      {(a.name.trim().charAt(0) || '?').toUpperCase()}
+                    </span>
+                  )}
                 </td>
+                <td className="text-bone">{a.name}</td>
                 <td className="text-bone/60 text-[12px]">{a.genre ?? '—'}</td>
                 <td className="font-mono text-[12px]">{a._count.tracks}</td>
                 <td>
                   <span className={cn('dot', a.isFeatured && 'dot-live')} />
                 </td>
                 <td className="font-mono text-[12px] text-bone/50">{a.sortOrder}</td>
-              </tr>
+                <EditCell />
+              </AdminRow>
             ))}
           </tbody>
         </table>

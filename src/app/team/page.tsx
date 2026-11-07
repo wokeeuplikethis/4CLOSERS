@@ -8,6 +8,7 @@ export default async function TeamPage() {
   const members = await prisma.teamMember.findMany({
     where: { isActive: true },
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    include: { studio: { select: { slug: true, city: true } } },
   })
 
   return <TeamContent members={members} />

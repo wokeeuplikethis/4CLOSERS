@@ -4,7 +4,16 @@ import { requireAdmin } from '@/lib/auth/requireAdmin'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
+function isUniqueError(e: unknown) {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    'code' in e &&
+    (e as { code?: unknown }).code === 'P2002'
+  )
+}
+
+export async function GET() {
   const auth = await requireAdmin()
   if (!auth.ok) {
     return NextResponse.json(
@@ -13,16 +22,9 @@ export async function GET(request: Request) {
     )
   }
 
-  const { searchParams } = new URL(request.url)
-  const studioSlug = searchParams.get('studio')
-
   const artists = await prisma.artist.findMany({
-    where: studioSlug ? { studio: { slug: studioSlug } } : undefined,
-    orderBy: [{ studioId: 'asc' }, { sortOrder: 'asc' }],
-    include: {
-      studio: { select: { slug: true, city: true } },
-      _count: { select: { tracks: true } },
-    },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    include: { _count: { select: { tracks: true } } },
   })
 
   return NextResponse.json({ artists })
@@ -39,7 +41,6 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => ({}))
 
-  const studioSlug = typeof body.studioSlug === 'string' ? body.studioSlug : null
   const name = typeof body.name === 'string' ? body.name.trim() : ''
   const slug = typeof body.slug === 'string' ? body.slug.trim() : ''
   const avatar = typeof body.avatar === 'string' && body.avatar ? body.avatar : null
@@ -48,22 +49,13 @@ export async function POST(request: Request) {
   const isFeatured = body.isFeatured === true
   const sortOrder = Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : 0
 
-  if (!studioSlug || !name || !slug) {
-    return NextResponse.json(
-      { error: 'studioSlug, name, slug обязательны' },
-      { status: 400 }
-    )
-  }
-
-  const studio = await prisma.studio.findUnique({ where: { slug: studioSlug } })
-  if (!studio) {
-    return NextResponse.json({ error: 'Студия не найдена' }, { status: 404 })
+  if (!name || !slug) {
+    return NextResponse.json({ error: 'name и slug обязательны' }, { status: 400 })
   }
 
   try {
     const artist = await prisma.artist.create({
       data: {
-        studioId: studio.id,
         name,
         slug,
         avatar,
@@ -75,10 +67,9 @@ export async function POST(request: Request) {
     })
     return NextResponse.json({ artist })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : ''
-    if (msg.includes('Unique constraint')) {
+    if (isUniqueError(e)) {
       return NextResponse.json(
-        { error: 'Артист с таким slug уже есть в этой студии' },
+        { error: 'Артист с таким slug уже существует' },
         { status: 409 }
       )
     }

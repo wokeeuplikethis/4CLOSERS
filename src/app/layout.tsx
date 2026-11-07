@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma'
 import type { StudioConfig, StudioSlug } from '@/types'
 
 export const metadata: Metadata = {
-  title: { default: 'БЛИЗКИЕ — Студия звукозаписи', template: '%s | БЛИЗКИЕ' },
+  title: { default: 'БЛИЗКИЕ', template: '%s | БЛИЗКИЕ' },
   description:
     'Две студии, один подход к звуку. Запись вокала и рэпа, сведение, мастеринг. Москва и Санкт-Петербург.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),

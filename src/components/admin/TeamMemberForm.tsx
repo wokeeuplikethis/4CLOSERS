@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 
 interface Initial {
   id?: string
+  studioSlug: '' | 'moscow' | 'spb'
   name: string
   nickname: string
   position: string
@@ -113,6 +114,19 @@ export function TeamMemberForm({ mode, initial }: Props) {
         label="фото"
         aspect="aspect-[4/5]"
       />
+
+      <label className="block">
+        <span className="field-label">город</span>
+        <select
+          className="field"
+          value={values.studioSlug}
+          onChange={(e) => update('studioSlug', e.target.value as '' | 'moscow' | 'spb')}
+        >
+          <option value="">Все города</option>
+          <option value="moscow">Москва</option>
+          <option value="spb">Санкт-Петербург</option>
+        </select>
+      </label>
 
       <label className="block">
         <span className="field-label">имя</span>

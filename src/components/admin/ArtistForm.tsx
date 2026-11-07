@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils'
 
 interface Initial {
   id?: string
-  studioSlug?: 'moscow' | 'spb'
   name: string
   slug: string
   avatar: string | null
@@ -102,20 +101,6 @@ export function ArtistForm({ mode, initial }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6 max-w-2xl">
-      {mode === 'create' && (
-        <label className="block">
-          <span className="field-label">студия</span>
-          <select
-            className="field"
-            value={values.studioSlug ?? 'moscow'}
-            onChange={(e) => update('studioSlug', e.target.value as 'moscow' | 'spb')}
-          >
-            <option value="moscow">Москва</option>
-            <option value="spb">Санкт-Петербург</option>
-          </select>
-        </label>
-      )}
-
       <label className="block">
         <span className="field-label">имя</span>
         <input

@@ -11,10 +11,23 @@ export default async function AdminServiceEditPage({
 }) {
   const service = await prisma.service.findUnique({
     where: { id: params.id },
-    include: { studio: { select: { slug: true } } },
+    include: {
+      room: { select: { id: true } },
+      studio: {
+        select: {
+          slug: true,
+          rooms: {
+            orderBy: { sortOrder: 'asc' },
+            select: { id: true, name: true },
+          },
+        },
+      },
+    },
   })
 
   if (!service) notFound()
+
+  const studioSlug = service.studio.slug as 'moscow' | 'spb'
 
   return (
     <div>
@@ -32,15 +45,22 @@ export default async function AdminServiceEditPage({
 
       <ServiceForm
         mode="edit"
+        rooms={service.studio.rooms.map((room) => ({
+          id: room.id,
+          name: room.name,
+          studioSlug,
+        }))}
         initial={{
           id: service.id,
-          studioSlug: service.studio.slug as 'moscow' | 'spb',
+          studioSlug,
+          roomId: service.roomId ?? null,
           name: service.name,
           slug: service.slug,
           description: service.description,
           price: service.price,
           duration: service.duration,
           features: service.features,
+          requiresSchedule: service.requiresSchedule,
           isActive: service.isActive,
           sortOrder: service.sortOrder,
         }}

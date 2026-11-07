@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -7,6 +7,12 @@ export const dynamic = 'force-dynamic'
 export default async function AdminStudiosPage() {
   const studios = await prisma.studio.findMany({
     orderBy: { slug: 'asc' },
+    include: {
+      rooms: {
+        orderBy: { sortOrder: 'asc' },
+        select: { id: true, name: true },
+      },
+    },
   })
 
   return (
@@ -42,6 +48,11 @@ export default async function AdminStudiosPage() {
               <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/40 mt-1">
                 {s.name} · {s.slug}
               </div>
+              {s.rooms.length > 0 && (
+                <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/60 mt-1">
+                  {s.rooms.map((room) => room.name).join(' · ')}
+                </div>
+              )}
             </div>
 
             <div className="hidden sm:block text-right min-w-0">
@@ -53,7 +64,7 @@ export default async function AdminStudiosPage() {
               </div>
             </div>
 
-            <ArrowUpRight
+            <Pencil
               className="h-4 w-4 shrink-0 text-bone/30 group-hover:text-signal transition-colors"
               aria-hidden="true"
             />

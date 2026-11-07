@@ -17,7 +17,10 @@ export async function GET(
     )
   }
 
-  const member = await prisma.teamMember.findUnique({ where: { id: params.id } })
+  const member = await prisma.teamMember.findUnique({
+    where: { id: params.id },
+    include: { studio: { select: { slug: true, city: true } } },
+  })
   if (!member) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   return NextResponse.json({ member })
@@ -89,10 +92,27 @@ export async function PATCH(
       ? body.instagramUrl.trim() : null
   }
 
+  if ('studioSlug' in body) {
+    const studioSlug = typeof body.studioSlug === 'string' ? body.studioSlug.trim() : ''
+    if (studioSlug) {
+      const studio = await prisma.studio.findUnique({
+        where: { slug: studioSlug },
+        select: { id: true },
+      })
+      if (!studio) {
+        return NextResponse.json({ error: 'Студия не найдена' }, { status: 400 })
+      }
+      data.studio = { connect: { id: studio.id } }
+    } else {
+      data.studio = { disconnect: true }
+    }
+  }
+
   try {
     const member = await prisma.teamMember.update({
       where: { id: params.id },
       data,
+      include: { studio: { select: { slug: true, city: true } } },
     })
     return NextResponse.json({ member })
   } catch {

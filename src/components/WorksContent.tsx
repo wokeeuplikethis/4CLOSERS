@@ -324,7 +324,7 @@ function LayerContent({
     return (
       <div className="h-full w-full flex items-center justify-center bg-slate">
         {fallbackLetter ? (
-          <span className="font-display text-5xl text-bone/15">
+          <span className="flex h-24 w-24 items-center justify-center rounded-full bg-bone font-display text-4xl text-void">
             {fallbackLetter}
           </span>
         ) : (

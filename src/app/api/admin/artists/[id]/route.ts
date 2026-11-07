@@ -20,7 +20,6 @@ export async function GET(
   const artist = await prisma.artist.findUnique({
     where: { id: params.id },
     include: {
-      studio: { select: { slug: true, city: true } },
       tracks: { orderBy: { sortOrder: 'asc' } },
     },
   })
@@ -103,7 +102,7 @@ export async function DELETE(
 
   const artist = await prisma.artist.findUnique({
     where: { id: params.id },
-    select: { avatar: true, tracks: { select: { coverImage: true, audioUrl: true } } },
+    select: { avatar: true, tracks: { select: { coverImage: true } } },
   })
   if (!artist) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -113,7 +112,6 @@ export async function DELETE(
   if (artist.avatar) await storage.delete(artist.avatar).catch(() => {})
   for (const t of artist.tracks) {
     if (t.coverImage) await storage.delete(t.coverImage).catch(() => {})
-    if (t.audioUrl) await storage.delete(t.audioUrl).catch(() => {})
   }
 
   return NextResponse.json({ success: true })

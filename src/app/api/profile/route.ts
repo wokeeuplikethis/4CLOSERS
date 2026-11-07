@@ -45,7 +45,8 @@ export async function GET(request: Request) {
     where: { userId },
     orderBy: { createdAt: 'desc' },
     include: {
-      service: { select: { id: true, name: true, slug: true } },
+      items: true,
+      room: { select: { id: true, slug: true, name: true } },
       studio: { select: { id: true, slug: true, city: true, name: true } },
     },
   })
@@ -60,10 +61,11 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}))
-  const data: { name?: string | null } = {}
+  // name в схеме обязательное поле, поэтому пустое значение — пустая строка, а не null
+  const data: { name?: string } = {}
 
   if (typeof body.name === 'string') {
-    data.name = body.name.trim() || null
+    data.name = body.name.trim()
   }
 
   if (Object.keys(data).length === 0) {
@@ -104,6 +106,7 @@ export async function DELETE(request: Request) {
     unlink(prevPath).catch(() => {})
   }
 
+  // Гостевые заявки (userId = null) не удаляем — deleteMany по userId их не задевает.
   await prisma.booking.deleteMany({ where: { userId } })
   await prisma.user.delete({ where: { id: userId } })
 

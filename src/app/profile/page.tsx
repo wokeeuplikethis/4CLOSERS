@@ -15,15 +15,7 @@ import {
 import { useStudio } from '@/components/StudioProvider'
 import { useCurrentStudio } from '@/components/SiteDataProvider'
 import { cn } from '@/lib/utils'
-
-interface BookingRow {
-  id: string
-  date: string
-  time: string
-  status: string
-  service?: { name: string } | null
-  studio?: { city: string; slug: string } | null
-}
+import type { Booking } from '@/types'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -35,7 +27,7 @@ export default function ProfilePage() {
   const [role, setRole] = useState<string>('USER')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [createdAt, setCreatedAt] = useState<string | null>(null)
-  const [bookings, setBookings] = useState<BookingRow[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -130,6 +122,7 @@ export default function ProfilePage() {
 
   const initial = (name || email || 'U').charAt(0).toUpperCase()
   const isAdmin = role === 'ADMIN'
+  const { upcoming, past } = splitBookings(bookings)
 
   return (
     <main className="min-h-[100svh] pt-8 pb-24">
@@ -215,7 +208,7 @@ export default function ProfilePage() {
                 {/* Роль */}
                 <div className="mt-3 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-bone/40">
                   <span className={cn('dot', isAdmin && 'dot-live')} />
-                  {isAdmin ? 'администратор' : 'клиент'}
+                  {isAdmin ? 'администратор' : 'пользователь'}
                   {saving && <span className="text-signal">· сохраняем…</span>}
                 </div>
 
@@ -286,16 +279,9 @@ export default function ProfilePage() {
           <div className="lg:col-span-7 space-y-12">
             {/* История */}
             <section>
-              <div className="flex items-end justify-between gap-4 mb-6">
-                <div className="section-mark flex-1">
-                  <span className="num">история</span>
-                  <span className="rule" />
-                </div>
-                {!loading && bookings.length > 0 && (
-                  <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone/40 whitespace-nowrap">
-                    {bookings.length} {bookings.length === 1 ? 'запись' : 'записей'}
-                  </span>
-                )}
+              <div className="section-mark mb-6">
+                <span className="num">история</span>
+                <span className="rule" />
               </div>
 
               {loading ? (
@@ -321,74 +307,18 @@ export default function ProfilePage() {
                   </Link>
                 </div>
               ) : (
-                <>
-                  {/* Десктоп — таблица */}
-                  <div className="hidden md:block">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>дата</th>
-                          <th>время</th>
-                          <th>услуга</th>
-                          <th>студия</th>
-                          <th className="text-right">статус</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {bookings.map((b) => (
-                          <tr key={b.id}>
-                            <td className="font-mono text-[12px] whitespace-nowrap">
-                              {new Date(b.date).toLocaleDateString('ru-RU', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                              })}
-                            </td>
-                            <td className="font-mono text-[12px]">{b.time}</td>
-                            <td>{b.service?.name ?? '—'}</td>
-                            <td className="text-bone/60">{b.studio?.city ?? '—'}</td>
-                            <td className="text-right">
-                              <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/60">
-                                <span className={cn('dot', b.status === 'CONFIRMED' && 'dot-live')} />
-                                {statusLabel(b.status)}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Мобила — карточки */}
-                  <ul className="md:hidden space-y-3">
-                    {bookings.map((b) => (
-                      <li key={b.id} className="panel p-5">
-                        <div className="flex items-start justify-between gap-4 mb-3">
-                          <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/60">
-                            <span className={cn('dot', b.status === 'CONFIRMED' && 'dot-live')} />
-                            {statusLabel(b.status)}
-                          </span>
-                          <span className="font-mono text-[11px] text-bone/40">
-                            {b.studio?.city ?? '—'}
-                          </span>
-                        </div>
-                        <p className="font-display text-lg font-light text-bone mb-3">
-                          {b.service?.name ?? '—'}
-                        </p>
-                        <div className="flex items-center gap-4 font-mono text-[11px] text-bone/60">
-                          <span className="inline-flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                            {new Date(b.date).toLocaleDateString('ru-RU')}
-                          </span>
-                          <span className="inline-flex items-center gap-1.5">
-                            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                            {b.time}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </>
+                <div className="space-y-10">
+                  <BookingGroup
+                    label="грядущие"
+                    bookings={upcoming}
+                    emptyHint="Грядущих записей пока нет — выберите услугу и слот."
+                  />
+                  <BookingGroup
+                    label="прошлые"
+                    bookings={past}
+                    emptyHint="Прошлых записей пока нет."
+                  />
+                </div>
               )}
             </section>
 
@@ -461,6 +391,240 @@ export default function ProfilePage() {
       </section>
     </main>
   )
+}
+
+function BookingGroup({
+  label,
+  bookings,
+  emptyHint,
+}: {
+  label: string
+  bookings: Booking[]
+  emptyHint: string
+}) {
+  return (
+    <div>
+      <div className="flex items-end justify-between gap-4 mb-4">
+        <div className="section-mark flex-1">
+          <span className="num">{label}</span>
+          <span className="rule" />
+        </div>
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone/40 whitespace-nowrap">
+          {bookings.length} {pluralBookings(bookings.length)}
+        </span>
+      </div>
+
+      {bookings.length === 0 ? (
+        <p className="text-sm text-bone/40">{emptyHint}</p>
+      ) : (
+        <>
+          {/* Десктоп — таблица */}
+          <div className="hidden md:block">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>дата</th>
+                  <th>услуги</th>
+                  <th>студия</th>
+                  <th className="text-right">сумма</th>
+                  <th className="text-right">статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((booking) => (
+                  <tr key={booking.id}>
+                    <td className="font-mono text-[12px] whitespace-nowrap align-top">
+                      <span className="block">{formatBookingDate(booking.date)}</span>
+                      <span className="block text-[11px] text-bone/40 mt-0.5">
+                        {formatBookingTime(booking.time)}
+                        {bookingHoursSuffix(booking)}
+                      </span>
+                    </td>
+                    <td className="align-top">
+                      <BookingItems items={booking.items} />
+                    </td>
+                    <td className="text-bone/60 align-top">
+                      {studioLine(booking.studio, booking.room)}
+                    </td>
+                    <td className="text-right font-mono text-[12px] whitespace-nowrap align-top">
+                      {(booking.total ?? 0).toLocaleString('ru-RU')} ₽
+                    </td>
+                    <td className="text-right align-top">
+                      <StatusBadge status={booking.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Мобила — карточки */}
+          <ul className="md:hidden space-y-3">
+            {bookings.map((booking) => (
+              <li key={booking.id} className="panel p-5">
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <StatusBadge status={booking.status} />
+                  <span className="font-mono text-[11px] text-bone/40 text-right">
+                    {studioLine(booking.studio, booking.room)}
+                  </span>
+                </div>
+
+                <div className="mb-3">
+                  <BookingItems
+                    items={booking.items}
+                    itemClassName="font-display text-lg font-light text-bone"
+                  />
+                </div>
+
+                <div className="flex items-end justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-4 font-mono text-[11px] text-bone/60">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                      {formatBookingDate(booking.date)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                      {formatBookingTime(booking.time)}
+                      {bookingHoursSuffix(booking)}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[12px] text-bone whitespace-nowrap">
+                    {(booking.total ?? 0).toLocaleString('ru-RU')} ₽
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  )
+}
+
+function BookingItems({
+  items,
+  itemClassName,
+}: {
+  items: Booking['items']
+  itemClassName?: string
+}) {
+  const list = items ?? []
+
+  if (list.length === 0) {
+    return <span className="text-bone/40">—</span>
+  }
+
+  return (
+    <ul className="space-y-0.5">
+      {list.map((item) => (
+        <li key={item.id} className={cn(itemClassName)}>
+          {item.name}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function StatusBadge({ status }: { status: Booking['status'] }) {
+  return (
+    <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/60">
+      <span className={cn('dot', status === 'CONFIRMED' && 'dot-live')} />
+      {statusLabel(status)}
+    </span>
+  )
+}
+
+function splitBookings(bookings: Booking[]) {
+  const upcoming: Booking[] = []
+  const past: Booking[] = []
+
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+
+  for (const booking of bookings) {
+    if (isUpcoming(booking, startOfToday.getTime())) {
+      upcoming.push(booking)
+    } else {
+      past.push(booking)
+    }
+  }
+
+  // Грядущие: дата по возрастанию, удалённые (без даты) — в конце, затем свежие заявки.
+  upcoming.sort((a, b) => {
+    const aDate = bookingDateValue(a.date)
+    const bDate = bookingDateValue(b.date)
+
+    if (aDate === null && bDate === null) return createdDesc(a, b)
+    if (aDate === null) return 1
+    if (bDate === null) return -1
+    if (aDate !== bDate) return aDate - bDate
+    return createdDesc(a, b)
+  })
+
+  // Прошлые: дата по убыванию, удалённые (без даты) — в конце, затем свежие заявки.
+  past.sort((a, b) => {
+    const aDate = bookingDateValue(a.date)
+    const bDate = bookingDateValue(b.date)
+
+    if (aDate === null && bDate === null) return createdDesc(a, b)
+    if (aDate === null) return 1
+    if (bDate === null) return -1
+    if (aDate !== bDate) return bDate - aDate
+    return createdDesc(a, b)
+  })
+
+  return { upcoming, past }
+}
+
+function isUpcoming(booking: Booking, startOfToday: number) {
+  const active = booking.status === 'PENDING' || booking.status === 'CONFIRMED'
+  if (!active) return false
+  if (booking.date === null) return true
+  return new Date(booking.date).getTime() >= startOfToday
+}
+
+function bookingDateValue(date: string | null) {
+  return date === null ? null : new Date(date).getTime()
+}
+
+function createdDesc(a: Booking, b: Booking) {
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+}
+
+function formatBookingDate(date: string | null) {
+  if (date === null) return 'без даты'
+  return new Date(date).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+function formatBookingTime(time: string | null) {
+  return time || '—'
+}
+
+/** «· 2 ч» — длительность сессии, если она имеет смысл (сессионные услуги или > 1 часа). */
+function bookingHoursSuffix(booking: Booking) {
+  const hours = booking.hours
+  if (!hours || hours < 1) return ''
+  const hasSessionItems = (booking.items ?? []).some((item) => item.requiresSchedule)
+  if (hours > 1 || hasSessionItems) return ` · ${hours} ч`
+  return ''
+}
+
+function studioLine(studio: Booking['studio'], room: Booking['room']) {
+  if (!studio) return '—'
+  return room ? `${studio.city} · ${room.name}` : studio.city
+}
+
+function pluralBookings(count: number) {
+  const mod10 = count % 10
+  const mod100 = count % 100
+
+  if (mod10 === 1 && mod100 !== 11) return 'запись'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'записи'
+  return 'записей'
 }
 
 function statusLabel(status: string) {

@@ -22,14 +22,28 @@ export interface StudioConfig {
   seo: { title: string; description: string; ogImage: string }
 }
 
+/** Помещение внутри города: PRO ROOM / LIGHT ROOM в Москве, одна студия в СПб. */
+export interface Room {
+  id: string
+  slug: string
+  name: string
+  description: string
+  image: string
+  sortOrder: number
+}
+
 export interface Service {
   id: string
+  /** null — услуга доступна в любом помещении города (сведение, мастеринг…). */
+  roomId: string | null
   name: string
   slug: string
   description: string
   price: number
   duration: number
   features: string[]
+  /** true — нужна дата и время (аренда, запись вокала). false — удалённая услуга. */
+  requiresSchedule: boolean
   isActive: boolean
   sortOrder: number
 }
@@ -78,12 +92,19 @@ export interface Review {
   createdAt: string
 }
 
+/** Тело запроса POST /api/bookings */
 export interface BookingFormData {
-  studioSlug: 'moscow' | 'spb'
-  serviceId: string
-  date: string
-  time: string
-  comment?: string
+  city: StudioSlug
+  roomId: string
+  serviceIds: string[]
+  date?: string | null
+  time?: string | null
+  /** Количество часов сессии (для услуг, которым нужны дата/время). */
+  hours?: number
+  name: string
+  phone: string
+  telegram?: string | null
+  comment?: string | null
 }
 
 export interface User {
@@ -103,18 +124,46 @@ export interface UserLite {
   avatar?: string | null
 }
 
+export interface BookingItem {
+  id: string
+  serviceId?: string | null
+  name: string
+  price: number
+  duration: number
+  requiresSchedule: boolean
+}
+
+export interface BookingRoom {
+  id: string
+  slug: string
+  name: string
+}
+
+export interface BookingStudio {
+  id: string
+  slug: string
+  city: string
+  name: string
+}
+
 export interface Booking {
   id: string
-  userId: string
+  userId: string | null
   studioId: string
-  serviceId: string
-  date: string
-  time: string
+  roomId: string | null
+  name: string
+  phone: string
+  telegram?: string | null
+  date: string | null
+  time: string | null
+  hours: number
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
-  comment?: string
+  comment?: string | null
+  total: number
   createdAt: string
-  service?: Service
-  studio?: StudioConfig
+  items: BookingItem[]
+  room?: BookingRoom | null
+  studio?: BookingStudio | null
 }
 
 export type StudioSlug = 'moscow' | 'spb'

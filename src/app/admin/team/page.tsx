@@ -2,12 +2,14 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { cn } from '@/lib/utils'
+import { AdminRow, EditCell } from '@/components/admin/AdminRow'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminTeamPage() {
   const members = await prisma.teamMember.findMany({
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    include: { studio: { select: { slug: true, city: true } } },
   })
 
   return (
@@ -40,14 +42,16 @@ export default async function AdminTeamPage() {
               <th>имя</th>
               <th>ник</th>
               <th>должность</th>
+              <th>город</th>
               <th>в команде</th>
               <th>порядок</th>
               <th>статус</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {members.map((m) => (
-              <tr key={m.id}>
+              <AdminRow key={m.id} href={`/admin/team/${m.id}`}>
                 <td>
                   {m.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -57,21 +61,19 @@ export default async function AdminTeamPage() {
                       className="h-10 w-10 rounded object-cover border border-ash"
                     />
                   ) : (
-                    <span className="font-mono text-[10px] text-bone/30">—</span>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-bone font-display text-sm text-void">
+                      {(m.name.trim().charAt(0) || '?').toUpperCase()}
+                    </span>
                   )}
                 </td>
-                <td>
-                  <Link
-                    href={`/admin/team/${m.id}`}
-                    className="text-bone hover:text-signal transition-colors"
-                  >
-                    {m.name}
-                  </Link>
-                </td>
+                <td className="text-bone">{m.name}</td>
                 <td className="font-mono text-[12px] text-bone/60">
                   {m.nickname ?? '—'}
                 </td>
                 <td className="text-bone/60 text-[12px]">{m.position}</td>
+                <td className="font-mono text-[12px] text-bone/50">
+                  {m.studio?.city ?? 'все'}
+                </td>
                 <td className="font-mono text-[12px] text-bone/50">
                   {m.timeInTeam ?? '—'}
                 </td>
@@ -82,7 +84,8 @@ export default async function AdminTeamPage() {
                     {m.isActive ? 'видна' : 'скрыта'}
                   </span>
                 </td>
-              </tr>
+                <EditCell />
+              </AdminRow>
             ))}
           </tbody>
         </table>

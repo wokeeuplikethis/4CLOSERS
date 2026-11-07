@@ -54,53 +54,116 @@ model Studio {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  rooms       Room[]
   services    Service[]
   bookings    Booking[]
   equipment   Equipment[]
   portfolio   PortfolioItem[]   // ← временно, для миграции
-  artists     Artist[]          // ← новое
+  teamMembers TeamMember[]
   reviews     Review[]
 
   @@map("studios")
 }
 
-model Service {
+/// Помещение внутри города: например PRO ROOM / LIGHT ROOM в Москве
+/// или единственная студия в Петербурге. Услуги записи привязаны к помещению.
+model Room {
   id          String   @id @default(cuid())
   studioId    String
   studio      Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  name        String
   slug        String
-  description String
-  price       Int
-  duration    Int
-  features    String[]
-  isActive    Boolean  @default(true)
+  name        String
+  description String   @default("")
+  image       String   @default("")
   sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  services    Service[]
   bookings    Booking[]
 
   @@unique([studioId, slug])
+  @@map("rooms")
+}
+
+model Service {
+  id               String   @id @default(cuid())
+  studioId         String
+  studio           Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  /// Помещение, к которому относится услуга. null — доступна в любом помещении города.
+  roomId           String?
+  room             Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  name             String
+  slug             String
+  description      String
+  price            Int
+  duration         Int
+  features         String[]
+  /// Нужна ли запись с датой и временем (аренда, запись вокала).
+  /// false — удалённые услуги: сведение, мастеринг, бит на заказ, дистрибуция.
+  requiresSchedule Boolean  @default(true)
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  bookingItems     BookingItem[]
+
+  @@unique([studioId, slug])
+  @@index([roomId])
   @@map("services")
 }
 
 model Booking {
   id          String        @id @default(cuid())
-  userId      String
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// null — гостевая заявка без аккаунта.
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   studioId    String
   studio      Studio        @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  serviceId   String
-  service     Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  date        DateTime
-  time        String
+  /// Помещение, выбранное при бронировании. null — услуга без привязки к помещению.
+  roomId      String?
+  room        Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  /// Контакты из формы — храним всегда, даже у зарегистрированного пользователя.
+  name        String
+  phone       String
+  telegram    String?
+  /// Дата и время есть только у сессионных услуг.
+  date        DateTime?
+  time        String?
+  /// Количество часов сессии (для услуг с requiresSchedule). Влияет на сумму.
+  hours       Int           @default(1)
   status      BookingStatus @default(PENDING)
   comment     String?
+  /// Снимок суммы на момент бронирования.
+  total       Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  items       BookingItem[]
+
+  @@index([userId])
+  @@index([roomId])
+  @@index([date])
   @@map("bookings")
+}
+
+model BookingItem {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  /// Снимок названия/цены/длительности, чтобы история не менялась при правке услуги.
+  name      String
+  price     Int
+  duration  Int
+  /// Снимок флага: требует ли услуга дату/время (нужен для пересчёта суммы по часам).
+  requiresSchedule Boolean @default(true)
+
+  @@index([bookingId])
+  @@map("booking_items")
 }
 
 // ── ОСТАЁТСЯ ВРЕМЕННО, для миграции в Artist/Track ─────────────
@@ -154,12 +217,11 @@ model Equipment {
 
 // ── НОВЫЕ МОДЕЛИ ────────────────────────────────────────────────
 
+/// Артисты общие для всех городов (не привязаны к студии).
 model Artist {
   id          String   @id @default(cuid())
-  studioId    String
-  studio      Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
   name        String
-  slug        String
+  slug        String   @unique
   avatar      String?
   genre       String?
   bio         String?
@@ -170,7 +232,6 @@ model Artist {
 
   tracks      Track[]
 
-  @@unique([studioId, slug])
   @@map("artists")
 }
 
@@ -195,6 +256,9 @@ model Track {
 
 model TeamMember {
   id               String   @id @default(cuid())
+  /// null — участник показывается во всех городах.
+  studioId         String?
+  studio           Studio?  @relation(fields: [studioId], references: [id], onDelete: SetNull)
   name             String
   nickname         String?
   position         String
@@ -210,5 +274,6 @@ model TeamMember {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  @@index([studioId])
   @@map("team_members")
 }

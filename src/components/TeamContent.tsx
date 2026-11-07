@@ -14,6 +14,12 @@ interface Member {
   telegramUrl: string | null
   vkUrl: string | null
   instagramUrl: string | null
+  studio: { slug: string; city: string } | null
+}
+
+const CITY_SHORT: Record<string, string> = {
+  moscow: 'МСК',
+  spb: 'СПБ',
 }
 
 export function TeamContent({ members }: { members: Member[] }) {
@@ -41,92 +47,105 @@ export function TeamContent({ members }: { members: Member[] }) {
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {members.map((m) => (
-              <article
-                key={m.id}
-                className="panel overflow-hidden flex flex-col transition-transform duration-300 ease-out hover:-translate-y-1"
-                >
-                {/* Фото */}
-                <div className="aspect-square bg-void border-b border-ash overflow-hidden shrink-0">
-                  {m.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={m.photo}
-                      alt={m.name}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-slate">
-                      <span className="font-display text-5xl text-bone/15">
-                        {m.name.charAt(0)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Текст */}
-                <div className="p-4 flex flex-col gap-2 flex-1">
-                  <div>
-                    <h3 className="font-display text-base text-bone tracking-[-0.02em] leading-tight">
-                      {m.name}
-                    </h3>
-                    {m.nickname && (
-                      <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/40 mt-1">
-                        {m.nickname}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-signal">
-                    {m.position}
-                  </div>
-
-                  {(m.timeInTeam || m.experience) && (
-                    <div className="space-y-0.5 pt-2 border-t border-ash">
-                      {m.timeInTeam && (
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/40">
-                            в команде
-                          </span>
-                          <span className="font-mono text-[11px] text-bone/70">
-                            {m.timeInTeam}
-                          </span>
-                        </div>
-                      )}
-                      {m.experience && (
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/40">
-                            стаж
-                          </span>
-                          <span className="font-mono text-[11px] text-bone/70">
-                            {m.experience}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {m.bio && (
-                    <p className="text-[12px] leading-snug text-bone/55 mt-1 line-clamp-3">
-                      {m.bio}
-                    </p>
-                  )}
-
-                  <SocialLinks
-                    size="sm"
-                    className="mt-auto pt-3"
-                    links={[
-                      { href: m.telegramUrl, label: 'Telegram', icon: 'telegram', color: 'FFFFFF' },
-                      { href: m.vkUrl, label: 'ВКонтакте', icon: 'vk', color: 'FFFFFF' },
-                      { href: m.instagramUrl, label: 'Instagram', icon: 'instagram', color: 'FFFFFF' },
-                    ]}
-                  />
-                </div>
-              </article>
+              <MemberCard key={m.id} member={m} />
             ))}
           </div>
         )}
       </div>
     </section>
+  )
+}
+
+function MemberCard({ member: m }: { member: Member }) {
+  const initial = (m.name.trim().charAt(0) || '?').toUpperCase()
+  const cityLabel = m.studio ? CITY_SHORT[m.studio.slug] ?? m.studio.city : null
+
+  return (
+    <article className="panel overflow-hidden flex flex-col transition-transform duration-300 ease-out hover:-translate-y-1">
+      {/* Фото или кружок с первой буквой */}
+      <div className="aspect-square bg-void border-b border-ash overflow-hidden shrink-0">
+        {m.photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={m.photo}
+            alt={m.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center bg-slate">
+            <span className="flex h-24 w-24 items-center justify-center rounded-full bg-bone font-display text-4xl text-void">
+              {initial}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Текст */}
+      <div className="p-4 flex flex-col gap-2 flex-1">
+        <div>
+          <h3 className="font-display text-base text-bone tracking-[-0.02em] leading-tight">
+            {m.name}
+          </h3>
+          {m.nickname && (
+            <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/40 mt-1">
+              {m.nickname}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-signal">
+            {m.position}
+          </span>
+          {cityLabel && (
+            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/50 border border-ash rounded px-1.5 py-0.5">
+              {cityLabel}
+            </span>
+          )}
+        </div>
+
+        {(m.timeInTeam || m.experience) && (
+          <div className="space-y-0.5 pt-2 border-t border-ash">
+            {m.timeInTeam && (
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/40">
+                  в команде
+                </span>
+                <span className="font-mono text-[11px] text-bone/70">
+                  {m.timeInTeam}
+                </span>
+              </div>
+            )}
+            {m.experience && (
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-bone/40">
+                  стаж
+                </span>
+                <span className="font-mono text-[11px] text-bone/70">
+                  {m.experience}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {m.bio && (
+          <p className="text-[12px] leading-snug text-bone/55 mt-1 line-clamp-3">
+            {m.bio}
+          </p>
+        )}
+
+        <SocialLinks
+          size="sm"
+          className="mt-auto pt-3"
+          links={[
+            { href: m.telegramUrl, label: 'Telegram', icon: 'telegram', color: 'FFFFFF' },
+            { href: m.vkUrl, label: 'ВКонтакте', icon: 'vk', color: 'FFFFFF' },
+            { href: m.instagramUrl, label: 'Instagram', icon: 'instagram', color: 'FFFFFF' },
+          ]}
+        />
+      </div>
+    </article>
   )
 }

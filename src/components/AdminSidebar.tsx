@@ -4,14 +4,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
-const links = [
+const links: { href: string; label: string; exact?: boolean }[] = [
   { href: '/admin', label: 'Обзор', exact: true },
+  { href: '/admin/bookings', label: 'Заявки' },
+  { href: '/admin/users', label: 'Пользователи' },
   { href: '/admin/studios', label: 'Студии' },
   { href: '/admin/services', label: 'Услуги' },
   { href: '/admin/equipment', label: 'Оборудование' },
   { href: '/admin/artists', label: 'Артисты' },
   { href: '/admin/team', label: 'Команда' },
-  { href: '/admin/reviews', label: 'Отзывы', disabled: true },
+  { href: '/admin/reviews', label: 'Отзывы' },
 ]
 
 export function AdminSidebar() {
@@ -27,19 +29,6 @@ export function AdminSidebar() {
           const isActive = link.exact
             ? pathname === link.href
             : pathname.startsWith(link.href)
-
-          if (link.disabled) {
-            return (
-              <li key={link.href}>
-                <span
-                  className="block px-3 py-2 rounded-md text-sm text-bone/25 cursor-not-allowed"
-                  aria-disabled="true"
-                >
-                  {link.label}
-                </span>
-              </li>
-            )
-          }
 
           return (
             <li key={link.href}>

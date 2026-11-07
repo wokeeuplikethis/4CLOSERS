@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Pencil } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { ArtistForm } from '@/components/admin/ArtistForm'
+import { AdminRow, EditCell } from '@/components/admin/AdminRow'
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -15,7 +16,6 @@ export default async function AdminArtistEditPage({
   const artist = await prisma.artist.findUnique({
     where: { id: params.id },
     include: {
-      studio: { select: { slug: true } },
       tracks: { orderBy: { sortOrder: 'asc' } },
     },
   })
@@ -26,7 +26,7 @@ export default async function AdminArtistEditPage({
     <div className="space-y-16">
       <div>
         <div className="section-mark mb-6">
-          <span className="num">{artist.studio.slug}</span>
+          <span className="num">артист</span>
           <span className="rule" />
         </div>
 
@@ -41,7 +41,6 @@ export default async function AdminArtistEditPage({
           mode="edit"
           initial={{
             id: artist.id,
-            studioSlug: artist.studio.slug as 'moscow' | 'spb',
             name: artist.name,
             slug: artist.slug,
             avatar: artist.avatar,
@@ -91,7 +90,10 @@ export default async function AdminArtistEditPage({
               {artist.tracks.map((t) => {
                 const linkCount = [t.yandexUrl, t.vkUrl, t.spotifyUrl].filter(Boolean).length
                 return (
-                  <tr key={t.id}>
+                  <AdminRow
+                    key={t.id}
+                    href={`/admin/artists/${artist.id}/tracks/${t.id}`}
+                  >
                     <td>
                       {t.coverImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -101,7 +103,9 @@ export default async function AdminArtistEditPage({
                           className="h-10 w-10 rounded object-cover border border-ash"
                         />
                       ) : (
-                        <span className="font-mono text-[10px] text-bone/30">—</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-bone font-display text-sm text-void">
+                          {(t.title.trim().charAt(0) || '?').toUpperCase()}
+                        </span>
                       )}
                     </td>
                     <td className="text-bone">{t.title}</td>
@@ -120,16 +124,8 @@ export default async function AdminArtistEditPage({
                     <td>
                       <span className={cn('dot', t.isFeatured && 'dot-live')} />
                     </td>
-                    <td className="text-right">
-                      <Link
-                        href={`/admin/artists/${artist.id}/tracks/${t.id}`}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-ash text-bone/60 hover:text-bone hover:border-signal transition-colors"
-                        aria-label="Редактировать"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Link>
-                    </td>
-                  </tr>
+                    <EditCell />
+                  </AdminRow>
                 )
               })}
             </tbody>

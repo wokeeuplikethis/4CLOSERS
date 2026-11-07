@@ -20,7 +20,7 @@ function Avatar({ user, size = 40 }: { user: UserLite; size?: number }) {
   const initial = (user.name?.trim() || user.email || '?').charAt(0).toUpperCase()
   return (
     <span
-      className="inline-flex items-center justify-center overflow-hidden rounded-full bg-slate text-bone font-mono"
+      className="inline-flex items-center justify-center overflow-hidden rounded-full bg-bone text-void font-mono"
       style={{ width: size, height: size, fontSize: size * 0.42 }}
       aria-hidden="true"
     >

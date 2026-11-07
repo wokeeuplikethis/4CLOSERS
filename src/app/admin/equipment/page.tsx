@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { StudioFilter } from '@/components/admin/StudioFilter'
+import { AdminRow, EditCell } from '@/components/admin/AdminRow'
 import { EQUIPMENT_LABELS } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -52,46 +53,43 @@ export default async function AdminEquipmentPage({
         <table className="table">
           <thead>
             <tr>
+              <th>фото</th>
               <th>студия</th>
               <th>категория</th>
               <th>название</th>
               <th>модель</th>
-              <th>фото</th>
               <th>порядок</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id}>
+              <AdminRow key={item.id} href={`/admin/equipment/${item.id}`}>
+                <td>
+                  {item.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.image}
+                      alt=""
+                      className="h-10 w-10 rounded object-cover border border-ash"
+                    />
+                  ) : (
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-bone font-display text-sm text-void">
+                      {(item.name.trim().charAt(0) || '?').toUpperCase()}
+                    </span>
+                  )}
+                </td>
                 <td className="font-mono text-[11px] uppercase tracking-[0.14em] text-bone/50">
                   {item.studio.slug === 'moscow' ? 'мск' : 'спб'}
                 </td>
                 <td className="text-bone/60 text-[12px]">
                   {EQUIPMENT_LABELS[item.category] ?? item.category}
                 </td>
-                <td>
-                  <Link
-                    href={`/admin/equipment/${item.id}`}
-                    className="text-bone hover:text-signal transition-colors"
-                  >
-                    {item.name}
-                  </Link>
-                </td>
+                <td>{item.name}</td>
                 <td className="font-mono text-[12px] text-bone/60">{item.model}</td>
-                <td>
-                  {item.image ? (
-                    <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-signal">
-                      <span className="dot dot-live" />
-                      есть
-                    </span>
-                  ) : (
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/30">
-                      нет
-                    </span>
-                  )}
-                </td>
                 <td className="font-mono text-[12px] text-bone/50">{item.sortOrder}</td>
-              </tr>
+                <EditCell />
+              </AdminRow>
             ))}
           </tbody>
         </table>

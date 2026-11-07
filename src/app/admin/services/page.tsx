@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { cn } from '@/lib/utils'
 import { StudioFilter } from '@/components/admin/StudioFilter'
+import { AdminRow, EditCell } from '@/components/admin/AdminRow'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +20,10 @@ export default async function AdminServicesPage({
         ? { studio: { slug: studioFilter } }
         : undefined,
     orderBy: [{ studioId: 'asc' }, { sortOrder: 'asc' }],
-    include: { studio: { select: { slug: true, city: true } } },
+    include: {
+      studio: { select: { slug: true, city: true } },
+      room: { select: { slug: true, name: true } },
+    },
   })
 
   return (
@@ -53,29 +57,32 @@ export default async function AdminServicesPage({
           <thead>
             <tr>
               <th>студия</th>
+              <th>помещение</th>
               <th>название</th>
               <th>цена</th>
               <th>длит.</th>
               <th>порядок</th>
               <th>статус</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {services.map((s) => (
-              <tr key={s.id}>
+              <AdminRow key={s.id} href={`/admin/services/${s.id}`}>
                 <td className="font-mono text-[11px] uppercase tracking-[0.14em] text-bone/50">
                   {s.studio.slug === 'moscow' ? 'мск' : 'спб'}
                 </td>
-                <td>
-                  <Link
-                    href={`/admin/services/${s.id}`}
-                    className="text-bone hover:text-signal transition-colors"
-                  >
-                    {s.name}
-                  </Link>
+                <td className="font-mono text-[11px] uppercase tracking-[0.14em] text-bone/50">
+                  {s.room?.name ?? 'все'}
                 </td>
+                <td>{s.name}</td>
                 <td className="font-mono text-[12px]">{s.price.toLocaleString('ru-RU')} ₽</td>
-                <td className="font-mono text-[12px]">{s.duration} мин</td>
+                <td className="font-mono text-[12px]">
+                  {s.duration} мин
+                  {!s.requiresSchedule && (
+                    <span className="text-bone/40"> · без даты</span>
+                  )}
+                </td>
                 <td className="font-mono text-[12px] text-bone/50">{s.sortOrder}</td>
                 <td>
                   <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/60">
@@ -83,7 +90,8 @@ export default async function AdminServicesPage({
                     {s.isActive ? 'видна' : 'скрыта'}
                   </span>
                 </td>
-              </tr>
+                <EditCell />
+              </AdminRow>
             ))}
           </tbody>
         </table>

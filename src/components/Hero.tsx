@@ -153,6 +153,48 @@ function HeroInner() {
     }
   }
 
+  /** Логотип появляется синхронно с гербом, но «раскрывается» с другой стороны. */
+  const logoStyle = (): CSSProperties => {
+    if (reduced) return {}
+
+    if (stage === 'shown') {
+      return {
+        opacity: 1,
+        transform: 'perspective(900px) rotateY(0deg) scale(1)',
+        filter: 'blur(0px) drop-shadow(0 0 28px rgba(232,230,225,.16))',
+        transition: `opacity 900ms ${EASE}, transform 900ms ${EASE}, filter 900ms ${EASE}`,
+        transitionDelay: '260ms',
+      }
+    }
+
+    if (stage === 'out') {
+      return {
+        opacity: 0,
+        transform: 'perspective(900px) rotateY(-70deg) scale(0.62)',
+        filter: 'blur(8px) drop-shadow(0 0 0 rgba(232,230,225,0))',
+        transition: `opacity ${OUT_DURATION + 80}ms ease-in, transform ${OUT_DURATION + 80}ms ease-in, filter ${OUT_DURATION + 80}ms ease-in`,
+      }
+    }
+
+    return {
+      opacity: 0,
+      transform: 'perspective(900px) rotateY(70deg) scale(0.62)',
+      filter: 'blur(8px) drop-shadow(0 0 0 rgba(232,230,225,0))',
+      transition: 'none',
+    }
+  }
+
+  /** Мягкий подъём для кнопки и статистики после появления заголовка. */
+  const fadeUpStyle = (delay: number, distance = 16): CSSProperties => {
+    if (reduced) return {}
+    return {
+      opacity: stage === 'shown' ? 1 : 0,
+      transform: stage === 'shown' ? 'translateY(0)' : `translateY(${distance}px)`,
+      transition: `opacity 620ms ${EASE}, transform 620ms ${EASE}`,
+      transitionDelay: stage === 'shown' ? `${delay}ms` : '0ms',
+    }
+  }
+
   const captionStyle: CSSProperties = reduced
     ? {}
     : {
@@ -271,14 +313,31 @@ function HeroInner() {
             </div>
           </div>
 
-          {/* Правая колонка — заглушка под будущий контент */}
-          <div className="col-span-12 lg:col-span-4 flex flex-col gap-4" />
+          {/* Правая колонка — логотип напротив названия города */}
+          <div className="col-span-12 lg:col-span-4 flex items-center justify-center lg:min-h-[340px]">
+            <div
+              className={cn(
+                'will-change-transform',
+                !reduced && stage === 'shown' && 'hero-logo-float'
+              )}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                key={`logo-${shown}`}
+                src="/images/logo1-bone.png"
+                alt="4CLOSERS"
+                draggable={false}
+                className="w-40 sm:w-52 lg:w-full lg:max-w-[300px] select-none will-change-transform"
+                style={logoStyle()}
+              />
+            </div>
+          </div>
 
           {/* Кнопка бронирования — пока на всю ширину, ниже сетки */}
         </div>
 
         {/* Кнопка бронирования */}
-        <div className="mt-8 flex justify-end">
+        <div className="mt-8 flex justify-end" style={fadeUpStyle(430)}>
           <Link
             href="/bookings"
             className="
@@ -334,20 +393,26 @@ function HeroInner() {
             pt-6
           "
         >
-          <Stat
-            value="500+"
-            label="треков записано"
-          />
+          <div style={fadeUpStyle(560)}>
+            <Stat
+              value="500+"
+              label="треков записано"
+            />
+          </div>
 
-          <Stat
-            value="7"
-            label="лет работы"
-          />
+          <div style={fadeUpStyle(630)}>
+            <Stat
+              value="7"
+              label="лет работы"
+            />
+          </div>
 
-          <Stat
-            value="24/7"
-            label="на связи"
-          />
+          <div style={fadeUpStyle(700)}>
+            <Stat
+              value="24/7"
+              label="на связи"
+            />
+          </div>
         </div>
       </div>
 

@@ -15,6 +15,8 @@
     --ash: 42 42 46;
     --bone: 232 230 225;
     --signal: 200 200 200;
+    /* Ошибки/обязательные поля */
+    --alert: 226 90 90;
 
     --radius: 6px;
     --radius-lg: 10px;
@@ -263,6 +265,13 @@
   }
   .field:focus-visible { outline: none; }
 
+  /* Невалидное обязательное поле — красная обводка */
+  .field-invalid,
+  .field-invalid:focus,
+  .field-invalid:focus-visible {
+    border-color: rgb(var(--alert));
+  }
+
   .field-label {
     display: block;
     font-family: var(--font-mono), monospace;
@@ -314,6 +323,8 @@
   }
 
   .text-signal { color: rgb(var(--signal)); }
+  .text-alert { color: rgb(var(--alert)); }
+  .border-alert { border-color: rgb(var(--alert)); }
   .text-muted { color: rgb(var(--bone) / 0.55); }
   .text-dim { color: rgb(var(--bone) / 0.35); }
 
@@ -335,6 +346,13 @@
   }
   .city-enter-right { animation: city-in-right 320ms cubic-bezier(.22,.61,.36,1) both; }
   .city-enter-left  { animation: city-in-left  320ms cubic-bezier(.22,.61,.36,1) both; }
+
+  /* Лёгкое парение логотипа в Hero после появления */
+  @keyframes hero-logo-float {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-10px); }
+  }
+  .hero-logo-float { animation: hero-logo-float 5.5s ease-in-out infinite alternate; }
 }
 
 /* Ошибки и подсказки под полями. */

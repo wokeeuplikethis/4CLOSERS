@@ -15,6 +15,7 @@ export async function GET() {
 
   const members = await prisma.teamMember.findMany({
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    include: { studio: { select: { slug: true, city: true } } },
   })
 
   return NextResponse.json({ members })
@@ -46,12 +47,25 @@ export async function POST(request: Request) {
     ? body.instagramUrl.trim() : null
   const sortOrder = Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : 0
   const isActive = body.isActive !== false
+  const studioSlug = typeof body.studioSlug === 'string' ? body.studioSlug.trim() : ''
 
   if (!name || !position) {
     return NextResponse.json(
       { error: 'name и position обязательны' },
       { status: 400 }
     )
+  }
+
+  let studioId: string | null = null
+  if (studioSlug) {
+    const studio = await prisma.studio.findUnique({
+      where: { slug: studioSlug },
+      select: { id: true },
+    })
+    if (!studio) {
+      return NextResponse.json({ error: 'Студия не найдена' }, { status: 400 })
+    }
+    studioId = studio.id
   }
 
   try {
@@ -69,7 +83,9 @@ export async function POST(request: Request) {
         instagramUrl,
         sortOrder,
         isActive,
+        studio: studioId ? { connect: { id: studioId } } : undefined,
       },
+      include: { studio: { select: { slug: true, city: true } } },
     })
     return NextResponse.json({ member })
   } catch {

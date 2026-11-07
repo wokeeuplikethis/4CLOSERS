@@ -11,6 +11,7 @@ export default async function AdminTeamEditPage({
 }) {
   const member = await prisma.teamMember.findUnique({
     where: { id: params.id },
+    include: { studio: { select: { slug: true } } },
   })
 
   if (!member) notFound()
@@ -33,6 +34,7 @@ export default async function AdminTeamEditPage({
         mode="edit"
         initial={{
           id: member.id,
+          studioSlug: (member.studio?.slug ?? '') as '' | 'moscow' | 'spb',
           name: member.name,
           nickname: member.nickname ?? '',
           position: member.position,

@@ -8,23 +8,32 @@ import { cn } from '@/lib/utils'
 
 interface Initial {
   id?: string
-  studioSlug?: 'moscow' | 'spb'
+  studioSlug: 'moscow' | 'spb'
+  roomId: string | null
   name: string
   slug: string
   description: string
   price: number
   duration: number
   features: string[]
+  requiresSchedule: boolean
   isActive: boolean
   sortOrder: number
+}
+
+interface RoomOption {
+  id: string
+  name: string
+  studioSlug: 'moscow' | 'spb'
 }
 
 interface Props {
   mode: 'create' | 'edit'
   initial: Initial
+  rooms: RoomOption[]
 }
 
-export function ServiceForm({ mode, initial }: Props) {
+export function ServiceForm({ mode, initial, rooms }: Props) {
   const router = useRouter()
   const [values, setValues] = useState<Initial>(initial)
   const [featureInput, setFeatureInput] = useState('')
@@ -64,7 +73,10 @@ export function ServiceForm({ mode, initial }: Props) {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          roomId: values.roomId || null,
+        }),
       })
 
       if (res.status === 401) {
@@ -119,14 +131,61 @@ export function ServiceForm({ mode, initial }: Props) {
         <Field label="студия">
           <select
             className="field"
-            value={values.studioSlug ?? 'moscow'}
-            onChange={(e) => update('studioSlug', e.target.value as 'moscow' | 'spb')}
+            value={values.studioSlug}
+            onChange={(e) => {
+              setValues((v) => ({
+                ...v,
+                studioSlug: e.target.value as 'moscow' | 'spb',
+                roomId: null,
+              }))
+              setSaved(false)
+            }}
           >
             <option value="moscow">Москва</option>
             <option value="spb">Санкт-Петербург</option>
           </select>
         </Field>
       )}
+
+      <div>
+        <label className="block">
+          <span className="field-label">помещение</span>
+          <select
+            className="field"
+            value={values.roomId ?? ''}
+            onChange={(e) => update('roomId', e.target.value || null)}
+          >
+            <option value="">Все помещения (без привязки)</option>
+            {rooms
+              .filter((room) => room.studioSlug === values.studioSlug)
+              .map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name}
+                </option>
+              ))}
+          </select>
+        </label>
+        <p className="field-hint">
+          Оставьте «все помещения», если услуга доступна в любом помещении города:
+          сведение, мастеринг, дистрибуция.
+        </p>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={values.requiresSchedule}
+            onChange={(e) => update('requiresSchedule', e.target.checked)}
+            className="h-4 w-4 accent-signal"
+          />
+          <span className="text-sm text-bone/80">Требует даты и времени</span>
+        </label>
+        <p className="field-hint">
+          Выключите для сведения, мастеринга и дистрибуции — такие услуги
+          оформляются без записи в студию.
+        </p>
+      </div>
 
       <Field label="название">
         <input

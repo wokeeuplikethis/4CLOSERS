@@ -18,6 +18,7 @@ export default function AdminTeamNewPage() {
       <TeamMemberForm
         mode="create"
         initial={{
+          studioSlug: '',
           name: '',
           nickname: '',
           position: '',

@@ -12,8 +12,12 @@ async function loadCity(slug: 'moscow' | 'spb'): Promise<CityPayload> {
   const studio = await prisma.studio.findUnique({ where: { slug } })
   if (!studio) throw new Error(`Studio ${slug} not found`)
 
-  const [services, equipment, artists, reviews] = await Promise.all([
+  const [services, rooms, equipment, artists, reviews] = await Promise.all([
     prisma.service.findMany({
+      where: { studioId: studio.id, isActive: true },
+      orderBy: { sortOrder: 'asc' },
+    }),
+    prisma.room.findMany({
       where: { studioId: studio.id, isActive: true },
       orderBy: { sortOrder: 'asc' },
     }),
@@ -22,7 +26,6 @@ async function loadCity(slug: 'moscow' | 'spb'): Promise<CityPayload> {
       orderBy: { sortOrder: 'asc' },
     }),
     prisma.artist.findMany({
-      where: { studioId: studio.id },
       orderBy: { sortOrder: 'asc' },
       include: { tracks: { orderBy: { sortOrder: 'asc' } } },
     }),
@@ -74,14 +77,24 @@ async function loadCity(slug: 'moscow' | 'spb'): Promise<CityPayload> {
 
   return {
     studio: studioConfig,
+    rooms: rooms.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      description: r.description,
+      image: r.image,
+      sortOrder: r.sortOrder,
+    })),
     services: services.map((s) => ({
       id: s.id,
+      roomId: s.roomId,
       name: s.name,
       slug: s.slug,
       description: s.description,
       price: s.price,
       duration: s.duration,
       features: s.features,
+      requiresSchedule: s.requiresSchedule,
       isActive: s.isActive,
       sortOrder: s.sortOrder,
     })),

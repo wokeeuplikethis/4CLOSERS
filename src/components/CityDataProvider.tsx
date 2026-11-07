@@ -2,10 +2,11 @@
 
 import { createContext, useContext, ReactNode } from 'react'
 import { useStudio } from '@/components/StudioProvider'
-import type { Service, EquipmentItem, Artist, Review, StudioConfig } from '@/types'
+import type { Service, EquipmentItem, Artist, Review, StudioConfig, Room } from '@/types'
 
 export interface CityPayload {
   studio: StudioConfig
+  rooms: Room[]
   services: Service[]
   equipment: EquipmentItem[]
   artists: Artist[]

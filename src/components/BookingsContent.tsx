@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   MapPin,
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { useCityData } from '@/components/CityDataProvider'
 import { useStudio } from '@/components/StudioProvider'
 import { StickyCitySwitch } from '@/components/StickyCitySwitch'
+import { RoomCard } from '@/components/RoomCard'
 
 const TIME_SLOTS = [
   '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
@@ -26,47 +27,82 @@ const TIME_SLOTS = [
 
 const NIGHT_SLOT = 'Ночь (24:00–06:00)'
 
-/** Услуги, которые не требуют даты/времени (удалённые). */
-function isRemoteService(slug: string, name: string) {
-  const s = slug.toLowerCase()
-  const n = name.toLowerCase()
-  return (
-    s.includes('mixing') ||
-    s.includes('mastering') ||
-    s.includes('distribution') ||
-    s.includes('beat') ||
-    n.includes('сведение') ||
-    n.includes('мастеринг') ||
-    n.includes('дистрибуц') ||
-    n.includes('бит на заказ')
-  )
+const HOUR_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8]
+
+/** Локальная дата в формате YYYY-MM-DD (без сдвига часового пояса). */
+function toISODate(day: Date): string {
+  const year = day.getFullYear()
+  const month = String(day.getMonth() + 1).padStart(2, '0')
+  const date = String(day.getDate()).padStart(2, '0')
+  return `${year}-${month}-${date}`
 }
 
 export function BookingsContent() {
   const { all } = useCityData()
-  const { currentStudio, setCurrentStudio } = useStudio()
+  const { currentStudio, user, userLoading } = useStudio()
   const city = currentStudio
 
-  const [selectedServiceSlugs, setSelectedServiceSlugs] = useState<string[]>([])
+  const cityData = all[city]
+  const studio = cityData.studio
+  const rooms = cityData.rooms
+  const services = cityData.services
+
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string>('')
+  const [hours, setHours] = useState(1)
   const [showCalendar, setShowCalendar] = useState(false)
   const [formData, setFormData] = useState({ name: '', telegram: '', phone: '', comment: '' })
+  const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; phone?: boolean }>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
 
-  const cityData = all[city]
-  const services = cityData.services
-  const studio = cityData.studio
+  const nameRef = useRef<HTMLInputElement>(null)
+  const phoneRef = useRef<HTMLInputElement>(null)
 
-  const selectedServices = services.filter((s) => selectedServiceSlugs.includes(s.slug))
-  const hasSessionServices = selectedServices.some(
-    (s) => !isRemoteService(s.slug, s.name)
+  const selectedRoom = rooms.find((r) => r.id === selectedRoomId) ?? null
+
+  /** Услуги выбранного помещения: общие для города (roomId = null) + привязанные к комнате. */
+  const availableServices = selectedRoom
+    ? services.filter((s) => s.roomId === null || s.roomId === selectedRoom.id)
+    : []
+  const selectedServices = availableServices.filter((s) =>
+    selectedServiceIds.includes(s.id)
   )
-  const hasRemoteServices = selectedServices.some((s) =>
-    isRemoteService(s.slug, s.name)
-  )
+  const scheduleNeeded = selectedServices.some((s) => s.requiresSchedule)
+
+  /** Оценка суммы: удалённые услуги — фиксированно, сессионные — за каждый час. */
+  const remoteTotal = selectedServices
+    .filter((s) => !s.requiresSchedule)
+    .reduce((sum, s) => sum + s.price, 0)
+  const sessionPrice = selectedServices
+    .filter((s) => s.requiresSchedule)
+    .reduce((sum, s) => sum + s.price, 0)
+  const effectiveHours = scheduleNeeded ? hours : 1
+  const estimatedTotal = remoteTotal + effectiveHours * sessionPrice
+
+  // Смена города — сброс выбора. В городе с одной комнатой (СПб) она выбирается сразу.
+  useEffect(() => {
+    const nextRooms = all[currentStudio].rooms
+    setSelectedRoomId(nextRooms.length === 1 ? nextRooms[0].id : null)
+    setSelectedServiceIds([])
+    setSelectedDate(null)
+    setSelectedTime('')
+    setHours(1)
+    setShowCalendar(false)
+    setError(null)
+    setSubmitted(false)
+  }, [all, currentStudio])
+
+  // Имя из профиля — один раз, когда пользователь загрузился, а поле пустое.
+  useEffect(() => {
+    if (userLoading) return
+    const userName = user?.name?.trim()
+    if (!userName) return
+    setFormData((prev) => (prev.name.trim() ? prev : { ...prev, name: userName }))
+  }, [user, userLoading])
 
   const nextDays = useMemo(() => {
     const days: Date[] = []
@@ -82,13 +118,27 @@ export function BookingsContent() {
 
   const quickDays = nextDays.slice(0, 10)
 
-  const toggleService = (slug: string) => {
-    setSelectedServiceSlugs((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+  const selectRoom = (roomId: string) => {
+    setSelectedRoomId(roomId)
+    setSelectedServiceIds([])
+    setSelectedDate(null)
+    setSelectedTime('')
+    setHours(1)
+    setShowCalendar(false)
+    setError(null)
+  }
+
+  const toggleService = (serviceId: string) => {
+    setSelectedServiceIds((prev) =>
+      prev.includes(serviceId)
+        ? prev.filter((id) => id !== serviceId)
+        : [...prev, serviceId]
     )
     setSelectedDate(null)
     setSelectedTime('')
+    setHours(1)
     setShowCalendar(false)
+    setError(null)
   }
 
   const getServiceIcon = (serviceName: string) => {
@@ -101,29 +151,56 @@ export function BookingsContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (selectedServiceSlugs.length === 0) {
+
+    setError(null)
+
+    if (!selectedRoom) {
+      setError('Выберите студию.')
+      return
+    }
+    if (selectedServices.length === 0) {
       setError('Выберите хотя бы одну услугу.')
       return
     }
-    if (hasSessionServices && (!selectedDate || !selectedTime)) {
-      setError('Выберите дату и время для сессионных услуг.')
+    if (scheduleNeeded && (!selectedDate || !selectedTime)) {
+      setError('Выберите дату и время для выбранных услуг.')
       return
     }
 
-    setError(null)
+    // Обязательные поля проверяем до отправки — подсвечиваем красным без общей ошибки.
+    const phoneDigits = formData.phone.replace(/\D/g, '')
+    const nextFieldErrors: { name?: boolean; phone?: boolean } = {}
+    if (!formData.name.trim()) nextFieldErrors.name = true
+    if (phoneDigits.length !== 11) nextFieldErrors.phone = true
+    if (nextFieldErrors.name || nextFieldErrors.phone) {
+      setFieldErrors(nextFieldErrors)
+      setError(null)
+      if (nextFieldErrors.name) {
+        nameRef.current?.focus()
+      } else {
+        phoneRef.current?.focus()
+      }
+      return
+    }
+
+    setFieldErrors({})
     setIsSubmitting(true)
 
-    const timeForApi = selectedTime === '24:00' ? '00:00' : selectedTime
-
     const payload = {
-      studioSlug: city,
-      serviceSlugs: selectedServiceSlugs,
-      date: hasSessionServices && selectedDate ? selectedDate.toISOString().slice(0, 10) : null,
-      time: hasSessionServices ? timeForApi : null,
-      comment: formData.comment,
-      name: formData.name,
-      telegram: formData.telegram,
-      phone: formData.phone,
+      city: currentStudio,
+      roomId: selectedRoom.id,
+      serviceIds: selectedServices.map((s) => s.id),
+      date: scheduleNeeded && selectedDate ? toISODate(selectedDate) : null,
+      time: scheduleNeeded
+        ? selectedTime === '24:00'
+          ? '00:00'
+          : selectedTime
+        : null,
+      hours: effectiveHours,
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+      telegram: formData.telegram || null,
+      comment: formData.comment.trim() || null,
     }
 
     try {
@@ -147,16 +224,27 @@ export function BookingsContent() {
   }
 
   const reset = () => {
-    setSelectedServiceSlugs([])
+    setSelectedRoomId(rooms.length === 1 ? rooms[0].id : null)
+    setSelectedServiceIds([])
     setSelectedDate(null)
     setSelectedTime('')
+    setHours(1)
     setShowCalendar(false)
-    setFormData({ name: '', telegram: '', phone: '', comment: '' })
+    setFormData({
+      name: user?.name?.trim() ?? '',
+      telegram: '',
+      phone: '',
+      comment: '',
+    })
+    setFieldErrors({})
     setError(null)
     setSubmitted(false)
   }
 
-  const canSubmit = selectedServiceSlugs.length > 0
+  const roomChosen = rooms.length === 0 || !!selectedRoom
+  const scheduleReady = !scheduleNeeded || (!!selectedDate && !!selectedTime)
+  const canShowForm =
+    roomChosen && selectedServices.length > 0 && scheduleReady
 
   return (
     <main className="min-h-[100svh] pb-16">
@@ -183,9 +271,22 @@ export function BookingsContent() {
             <h2 className="font-display text-2xl font-light text-bone mb-3">
               Заявка отправлена
             </h2>
-            <p className="text-sm text-bone/60 mb-8 max-w-[44ch] mx-auto">
+            <p className="text-sm text-bone/60 mb-4 max-w-[44ch] mx-auto">
               Мы свяжемся с вами.
             </p>
+
+            {user && (
+              <p className="mb-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/40">
+                <span>Заявка сохранена в вашем профиле</span>
+                <Link
+                  href="/profile"
+                  className="text-signal hover:text-bone transition-colors underline underline-offset-4"
+                >
+                  профиль
+                </Link>
+              </p>
+            )}
+
             <div className="flex items-center justify-center gap-3">
               <button onClick={reset} className="btn btn-line">
                 Новая заявка
@@ -197,34 +298,6 @@ export function BookingsContent() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Город */}
-            <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/35 mb-3 block">
-                Город
-              </label>
-              <div className="flex gap-3">
-                {(['moscow', 'spb'] as const).map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => {
-                      setCurrentStudio(c)
-                      setSelectedServiceSlugs([])
-                      setSelectedDate(null)
-                      setSelectedTime('')
-                    }}
-                    className={cn(
-                      'flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition-all duration-200',
-                      city === c
-                        ? 'border-signal bg-signal/10 text-signal'
-                        : 'border-ash bg-transparent text-bone/60 hover:border-bone/30 hover:text-bone'
-                    )}
-                  >
-                    {c === 'moscow' ? 'Москва (МСК)' : 'Санкт-Петербург (СПБ)'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Адрес */}
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-signal" />
@@ -233,25 +306,63 @@ export function BookingsContent() {
               </span>
             </div>
 
-            {/* Услуги */}
+            {/* Студия — одно помещение города */}
+            <div>
+              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/35 mb-3 flex items-center justify-between gap-4">
+                <span>Студия</span>
+                {rooms.length > 1 && (
+                  <span className="normal-case tracking-normal text-bone/25">
+                    {rooms.length} помещения
+                  </span>
+                )}
+              </label>
+
+              {rooms.length === 0 ? (
+                <div className="p-6 rounded-xl border border-dashed border-ash/50 text-center">
+                  <p className="text-sm text-bone/40">Помещения скоро будут добавлены</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {rooms.map((room) => (
+                    <RoomCard
+                      key={room.id}
+                      room={room}
+                      selected={room.id === selectedRoomId}
+                      onSelect={() => selectRoom(room.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Услуги выбранной комнаты */}
             <div>
               <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/35 mb-3 block">
                 Выберите услуги (можно несколько)
               </label>
-              {services.length === 0 ? (
+
+              {!selectedRoom ? (
+                <div className="p-6 rounded-xl border border-dashed border-ash/50 text-center">
+                  <p className="text-sm text-bone/40">
+                    Выберите студию, чтобы увидеть услуги
+                  </p>
+                </div>
+              ) : availableServices.length === 0 ? (
                 <div className="p-6 rounded-xl border border-dashed border-ash/50 text-center">
                   <p className="text-sm text-bone/40">Услуги скоро будут добавлены</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {services.map((service) => {
+                  {availableServices.map((service) => {
                     const Icon = getServiceIcon(service.name)
-                    const isSelected = selectedServiceSlugs.includes(service.slug)
-                    const remote = isRemoteService(service.slug, service.name)
+                    const isSelected = selectedServiceIds.includes(service.id)
+                    const remote = !service.requiresSchedule
                     return (
                       <button
                         key={service.id}
-                        onClick={() => toggleService(service.slug)}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => toggleService(service.id)}
                         className={cn(
                           'flex items-start gap-4 p-4 rounded-xl border text-left transition-all duration-200',
                           isSelected
@@ -299,8 +410,8 @@ export function BookingsContent() {
               )}
             </div>
 
-            {/* Дата и время — только для сессионных услуг */}
-            {selectedServiceSlugs.length > 0 && hasSessionServices && (
+            {/* Дата и время — только для услуг, которым нужна запись */}
+            {selectedServices.length > 0 && scheduleNeeded && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-5">
                 <div className="flex items-center justify-between gap-4">
                   <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/35 flex items-center gap-2">
@@ -327,6 +438,7 @@ export function BookingsContent() {
                       return (
                         <button
                           key={i}
+                          type="button"
                           onClick={() => {
                             setSelectedDate(date)
                             setSelectedTime('')
@@ -402,16 +514,50 @@ export function BookingsContent() {
               </div>
             )}
 
-            {/* Пояснение для удалённых услуг */}
-            {selectedServiceSlugs.length > 0 && !hasSessionServices && hasRemoteServices && (
+            {/* Количество часов — только для услуг с записью */}
+            {selectedServices.length > 0 && scheduleNeeded && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/35 mb-3 flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5" />
+                  Количество часов
+                </label>
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                  {HOUR_OPTIONS.map((option) => {
+                    const isSelected = hours === option
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => setHours(option)}
+                        className={cn(
+                          'h-10 rounded-lg border text-sm font-mono transition-colors',
+                          isSelected
+                            ? 'border-signal bg-signal text-void'
+                            : 'border-ash text-bone/70 hover:border-bone/40 hover:text-bone'
+                        )}
+                      >
+                        {option} ч
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Дата и время не нужны — удалённые услуги */}
+            {selectedServices.length > 0 && !scheduleNeeded && (
               <div className="p-4 rounded-xl border border-ash bg-ash/10">
-                <p className="text-sm text-bone/60">Мы свяжемся с вами.</p>
+                <p className="text-sm text-bone/60">
+                  Для выбранных услуг дата и время не требуются — свяжемся с вами, чтобы обсудить детали.
+                </p>
               </div>
             )}
 
             {/* Форма контактов */}
-            {canSubmit && (hasSessionServices ? !!selectedDate && !!selectedTime : true) && (
+            {canShowForm && (
               <form
+                noValidate
                 onSubmit={handleSubmit}
                 className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4"
               >
@@ -420,31 +566,52 @@ export function BookingsContent() {
                 </label>
 
                 <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Ваше имя"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-ash/10 border border-ash rounded-lg px-4 py-3 text-sm text-bone placeholder:text-bone/30 focus:outline-none focus:border-signal transition-colors"
-                  />
+                  <div>
+                    <input
+                      ref={nameRef}
+                      type="text"
+                      placeholder="Ваше имя"
+                      required
+                      aria-invalid={!!fieldErrors.name}
+                      autoComplete="name"
+                      value={formData.name}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, name: e.target.value }))
+                        if (fieldErrors.name) {
+                          setFieldErrors((prev) => ({ ...prev, name: false }))
+                        }
+                      }}
+                      className={cn('field', fieldErrors.name && 'field-invalid')}
+                    />
+                    {fieldErrors.name && <p className="field-error">Укажите имя</p>}
+                  </div>
 
                   <TelegramInput
                     value={formData.telegram}
                     onChange={(tg) => setFormData({ ...formData, telegram: tg })}
                   />
 
-                  <PhoneInput
-                    value={formData.phone}
-                    onChange={(phone) => setFormData({ ...formData, phone })}
-                  />
+                  <div>
+                    <PhoneInput
+                      inputRef={phoneRef}
+                      invalid={!!fieldErrors.phone}
+                      value={formData.phone}
+                      onChange={(phone) => {
+                        setFormData((prev) => ({ ...prev, phone }))
+                        if (fieldErrors.phone) {
+                          setFieldErrors((prev) => ({ ...prev, phone: false }))
+                        }
+                      }}
+                    />
+                    {fieldErrors.phone && <p className="field-error">Укажите телефон полностью</p>}
+                  </div>
 
                   <textarea
                     placeholder="Комментарий (жанр, референсы, что готово…)"
                     rows={3}
                     value={formData.comment}
                     onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-                    className="w-full bg-ash/10 border border-ash rounded-lg px-4 py-3 text-sm text-bone placeholder:text-bone/30 focus:outline-none focus:border-signal transition-colors resize-none"
+                    className="field resize-none"
                   />
                 </div>
 
@@ -453,6 +620,16 @@ export function BookingsContent() {
                     {error}
                   </p>
                 )}
+
+                <div className="flex items-center justify-between gap-4 pt-2">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone/35">
+                    Итого
+                    {scheduleNeeded ? ` · ${hours} ч` : ''}
+                  </span>
+                  <span className="font-display text-2xl text-signal whitespace-nowrap">
+                    {estimatedTotal.toLocaleString('ru-RU')} ₽
+                  </span>
+                </div>
 
                 <button
                   type="submit"
@@ -481,12 +658,14 @@ export function BookingsContent() {
 function PhoneInput({
   value,
   onChange,
+  invalid,
+  inputRef,
 }: {
   value: string
   onChange: (v: string) => void
+  invalid?: boolean
+  inputRef?: React.Ref<HTMLInputElement>
 }) {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-
   const format = (d: string) => {
     if (!d) return '+7 '
     const rest = d.startsWith('7') ? d.slice(1) : d
@@ -526,15 +705,18 @@ function PhoneInput({
 
   return (
     <input
+      ref={inputRef}
       type="tel"
       inputMode="tel"
       placeholder="+7 999 123 45 67"
       required
+      aria-invalid={invalid}
+      autoComplete="tel"
       value={value}
       onChange={handleChange}
       onFocus={handleFocus}
       onBlur={handleBlur}
-      className="w-full bg-ash/10 border border-ash rounded-lg px-4 py-3 text-sm text-bone placeholder:text-bone/30 focus:outline-none focus:border-signal transition-colors font-mono tracking-wide"
+      className={cn('field font-mono tracking-wide', invalid && 'field-invalid')}
     />
   )
 }
@@ -568,13 +750,12 @@ function TelegramInput({
     <input
       type="text"
       inputMode="text"
-      placeholder="@username"
-      required
+      placeholder="@username (необязательно)"
       value={value ? `@${clean}` : ''}
       onChange={handleChange}
       onFocus={handleFocus}
       onBlur={handleBlur}
-      className="w-full bg-ash/10 border border-ash rounded-lg px-4 py-3 text-sm text-bone placeholder:text-bone/30 focus:outline-none focus:border-signal transition-colors font-mono tracking-wide"
+      className="field font-mono tracking-wide"
     />
   )
 }

@@ -18,7 +18,10 @@ export async function GET(
 
   const service = await prisma.service.findUnique({
     where: { id: params.id },
-    include: { studio: { select: { slug: true, city: true } } },
+    include: {
+      studio: { select: { slug: true, city: true } },
+      room: { select: { id: true, slug: true, name: true } },
+    },
   })
   if (!service) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -67,10 +70,44 @@ export async function PATCH(
     }
   }
 
+  const existing = await prisma.service.findUnique({
+    where: { id: params.id },
+    select: { studioId: true },
+  })
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  if ('roomId' in body) {
+    const rawRoomId = body.roomId
+    if (rawRoomId === null || rawRoomId === undefined) {
+      data.roomId = null
+    } else if (typeof rawRoomId === 'string') {
+      const value = rawRoomId.trim()
+      if (!value) {
+        data.roomId = null
+      } else {
+        const room = await prisma.room.findUnique({ where: { id: value } })
+        if (!room || room.studioId !== existing.studioId) {
+          return NextResponse.json({ error: 'Помещение не найдено' }, { status: 400 })
+        }
+        data.roomId = room.id
+      }
+    } else {
+      return NextResponse.json({ error: 'Некорректное помещение' }, { status: 400 })
+    }
+  }
+
+  if ('requiresSchedule' in body) {
+    if (typeof body.requiresSchedule !== 'boolean') {
+      return NextResponse.json({ error: 'requiresSchedule должен быть boolean' }, { status: 400 })
+    }
+    data.requiresSchedule = body.requiresSchedule
+  }
+
   try {
     const service = await prisma.service.update({
       where: { id: params.id },
       data,
+      include: { room: { select: { id: true, slug: true, name: true } } },
     })
     return NextResponse.json({ service })
   } catch (e: unknown) {

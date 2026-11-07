@@ -18,7 +18,6 @@ export default function AdminArtistNewPage() {
       <ArtistForm
         mode="create"
         initial={{
-          studioSlug: 'moscow',
           name: '',
           slug: '',
           avatar: null,
