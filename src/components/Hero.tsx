@@ -203,10 +203,8 @@ function HeroInner() {
         transitionDelay: stage === 'shown' ? '200ms' : '0ms',
       }
 
-  const coords =
-    shown === 'moscow'
-      ? 'mow · 55.7558° n · 37.6173° e'
-      : 'spb · 59.9311° n · 30.3609° e'
+  // Координаты берём из активной студии, чтобы они всегда совпадали с выбранным городом.
+  const coords = `${studio.shortName.toLowerCase()} · ${studio.latitude.toFixed(4)}° n · ${studio.longitude.toFixed(4)}° e`
 
   let letterIndex = 0
 
@@ -341,26 +339,27 @@ function HeroInner() {
                   group
                   inline-flex
                   w-full
-                  sm:w-auto
+                  sm:w-full
+                  max-w-[520px]
                   min-h-14
-                  min-w-[min(100%,320px)]
                   items-center
                   justify-between
                   gap-8
                   rounded-md
                   border
-                  border-signal
-                  bg-signal
+                  border-bone/70
+                  bg-void
                   px-6
                   sm:px-7
                   py-4
                   text-base
                   font-medium
-                  text-void
+                  text-bone
                   transition-colors
                   duration-200
                   hover:border-bone
                   hover:bg-bone
+                  hover:text-void
                   focus:outline-none
                   focus-visible:ring-2
                   focus-visible:ring-signal
@@ -368,7 +367,7 @@ function HeroInner() {
                   focus-visible:ring-offset-void
                 "
               >
-                <span>Забронировать студию</span>
+                <span>Забронировать сессию</span>
                 <ArrowUpRight
                   className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                   aria-hidden="true"
